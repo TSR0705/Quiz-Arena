@@ -1,14 +1,11 @@
 import { motion } from "framer-motion";
-
 import { styles } from "../styles";
 
 const Hero = () => {
-
-  
   return (
     <section className={`relative w-full h-screen mx-auto`}>
       <div
-        className={`absolute inset-0 top-[120px]  max-w-7xl mx-auto ${styles.paddingX} flex flex-row items-start gap-5`}
+        className={`absolute inset-0 top-[120px] max-w-7xl mx-auto ${styles.paddingX} flex flex-row items-start gap-5`}
       >
         <div className='flex flex-col justify-center items-center mt-28 md:mt-5 lg:5'>
           <div className='w-5 h-5 rounded-full bg-[#915EFF]' />
@@ -17,18 +14,24 @@ const Hero = () => {
 
         <div className="mt-28 md:mt-5 lg:5">
           <h1 className={`${styles.heroHeadText} text-white`}>
-            Welcome to <span className='text-[#915EFF]'>QuizArena</span>
+            Challenge Your Knowledge with <span className='text-[#915EFF]'>QuizArena</span>
           </h1>
           <p className={`${styles.heroSubText} mt-2 text-white-100`}>
-          Unleash your knowledge. Play quizzes. Track your score. <br/>
-           
+            Test your knowledge across various topics, compete with others, and see how you rank on the leaderboard.
+          </p>
+
+          {/* Button with link */}
+          <a href="http://localhost:5173/#Quizzes">
+            <button className="mt-4 px-6 py-3 bg-[#915EFF] text-white rounded-lg hover:bg-[#7A4ED9] transition-colors">
+              Start Quiz
+            </button>
+          </a>
+
+          <p className="mt-4 text-white-100 text-[14px]">
+            Join over 10,000 quiz enthusiasts!
           </p>
         </div>
       </div>
-
-      
-
-      
 
       <div className='absolute xs:bottom-10 bottom-32 w-full flex justify-center items-center'>
         <a href='#about'>

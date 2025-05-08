@@ -60,7 +60,71 @@ const quizzes = [
         description: "Study structures, materials, and infrastructure.", 
         topics: ["Structural Analysis", "Concrete Technology", "Soil Mechanics", "Transportation Engineering", "Surveying", "Hydraulics", "Construction Planning"] 
       },
-
+      {
+        title: "Anatomy",
+        description: "Study the structure of the human body.",
+        topics: ["Skeletal System", "Muscular System", "Nervous System", "Digestive System", "Circulatory System", "Reproductive System", "Histology", "Body Cavities", "Organ Systems"]
+      },
+      {
+        title: "Pharmacology",
+        description: "Understand drug actions and interactions.",
+        topics: ["Drug Classification", "Pharmacokinetics", "Pharmacodynamics", "Side Effects", "Therapeutic Uses", "Antibiotics", "Cardiovascular Drugs", "Neuropharmacology", "Dosage Calculation"]
+      },
+      {
+        title: "Pathology",
+        description: "Explore disease mechanisms and diagnosis.",
+        topics: ["General Pathology", "Systemic Pathology", "Tumors", "Inflammation", "Cell Injury", "Immunopathology", "Infectious Diseases", "Blood Disorders", "Diagnostic Methods"]
+      },
+      {
+        title: "Criminal Law",
+        description: "Learn the principles of criminal justice.",
+        topics: ["Crimes Against Persons", "Crimes Against Property", "Mens Rea and Actus Reus", "Defenses", "Punishments", "Evidence", "Court Procedures", "Criminal Code", "Juvenile Justice"]
+      },
+      {
+        title: "Civil Law",
+        description: "Delve into private legal matters.",
+        topics: ["Contracts", "Torts", "Property Law", "Family Law", "Succession Law", "Consumer Rights", "Liability", "Injunctions", "Remedies"]
+      },
+      {
+        title: "Physics",
+        description: "Explore the laws of nature and physical phenomena.",
+        topics: ["Mechanics", "Electromagnetism", "Thermodynamics", "Waves", "Optics", "Modern Physics", "Quantum Mechanics", "Nuclear Physics", "Relativity"]
+      },
+      {
+        title: "Biology",
+        description: "Understand life and living organisms.",
+        topics: ["Cell Biology", "Genetics", "Evolution", "Human Physiology", "Plant Biology", "Ecology", "Microbiology", "Biotechnology", "Classification of Organisms"]
+      },
+      {
+        title: "Calculus",
+        description: "Master the mathematics of change and motion.",
+        topics: ["Limits", "Derivatives", "Integrals", "Applications of Derivatives", "Applications of Integrals", "Differential Equations", "Series", "Multivariable Calculus", "Optimization"]
+      },
+      {
+        title: "Statistics",
+        description: "Analyze and interpret data meaningfully.",
+        topics: ["Data Collection", "Probability", "Distributions", "Descriptive Statistics", "Inferential Statistics", "Hypothesis Testing", "Regression", "Correlation", "Sampling"]
+      },
+      {
+        title: "English Grammar",
+        description: "Perfect your understanding of English structure.",
+        topics: ["Parts of Speech", "Tenses", "Subject-Verb Agreement", "Clauses", "Sentence Structure", "Articles", "Modifiers", "Prepositions", "Punctuation"]
+      },
+      {
+        title: "Vocabulary",
+        description: "Enhance your word power and comprehension.",
+        topics: ["Synonyms", "Antonyms", "One-word Substitutions", "Idioms & Phrases", "Common Confusables", "Word Formation", "Contextual Usage", "Phrasal Verbs", "Root Words"]
+      },
+      {
+        title: "Logical Reasoning",
+        description: "Test and train your logical thinking skills.",
+        topics: ["Number Series", "Letter Series", "Analogies", "Coding-Decoding", "Seating Arrangements", "Blood Relations", "Direction Sense", "Cause and Effect", "Odd One Out"]
+      },
+      {
+        title: "Analytical Reasoning",
+        description: "Solve complex puzzles and arguments.",
+        topics: ["Syllogisms", "Data Sufficiency", "Assumptions", "Conclusions", "Statements and Arguments", "Decision Making", "Input-Output", "Puzzle Solving", "Pattern Recognition"]
+      }
 ];
 
 const itemsPerPage = 6;
@@ -79,11 +143,11 @@ const [numQuestions, setNumQuestions] = useState(5);
 
   const navigate = useNavigate();
 
-  // Auto-slide every 5 seconds
+  // Auto-slide every 7 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPage((prev) => (prev < totalPages ? prev + 1 : 1));
-    }, 5000);
+    }, 7000); //1000 milliseconds = 1 second
 
     return () => clearInterval(interval);
   }, [totalPages]);

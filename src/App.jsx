@@ -5,6 +5,8 @@ import Footer from "./components/Footer";
 import Auth from "./components/Auth";
 import QuizSelectionPage from "./components/QuizSelectionPage";
 import QuizPage from "./components/QuizPage"; // Import your QuizPage
+import QuizCompletionPage from "./components/QuizCompletionPage";
+
 
 const App = () => {
   return (
@@ -13,21 +15,24 @@ const App = () => {
         <div className="bg-hero-pattern bg-cover bg-no-repeat bg-center">
           <Navbar />
           <Hero />
+          
         </div>
-        
-        {/* Common sections across all pages */}
         <About />
-
+        <div>
         <Routes>
           {/* Home page - Show Navbar, Hero, About, QuizSelectionPage */}
           <Route path="/" element={<QuizSelectionPage />} />
-          
           {/* Quiz page - Show Navbar, Hero, About, QuizPage */}
           <Route path="/quizpage" element={<QuizPage />} />
+          <Route path="/quiz-completion" element={<QuizCompletionPage />} />
+          
         </Routes>
+        </div>
 
+        <Feedbacks />
         {/* Always show Auth, StarsCanvas, Footer */}
         <div className="relative z-0">
+          
           <Auth />
           <StarsCanvas />
           <Footer />

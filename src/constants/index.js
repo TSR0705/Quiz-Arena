@@ -5,13 +5,6 @@ import {
   creator,
   mobile,
   web,
-  
-  gearXpert,
-  project2,
-  project3,
-
-  
-
   firstTestimonial,
   secondTestimonial,
   thirdTestimonial,
@@ -87,15 +80,7 @@ const testimonials = [
 ];
 
 const projects = [
-  {
-   
-  },
-  {
-    
-  },
-  {
-    
-  },
+  
 ];
 
 export { services,  testimonials, projects };

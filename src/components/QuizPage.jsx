@@ -22,24 +22,7 @@ const generateQuizData = (topic, numQuestions, difficulty) => {
   return questions;
 };
 
-// Mock leaderboard data
-const mockLeaderboards = {
-  global: [
-    { name: "User1", points: 150 },
-    { name: "User2", points: 120 },
-    { name: "User3", points: 100 },
-  ],
-  friends: [
-    { name: "Friend1", points: 130 },
-    { name: "Friend2", points: 110 },
-  ],
-  classroom: [
-    { name: "Student1", points: 140 },
-    { name: "Student2", points: 90 },
-  ],
-};
-
-const QuizPage = () => {
+const QuizTakingPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -55,29 +38,26 @@ const QuizPage = () => {
   const [quizData, setQuizData] = useState([]);
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState("");
-  const [answers, setAnswers] = useState({}); // Track answers
-  const [points, setPoints] = useState(0); // Points instead of score
-  const [xp, setXP] = useState(0); // XP for leveling
-  const [level, setLevel] = useState(1); // User level
-  const [streak, setStreak] = useState(0); // Streak counter
-  const [dailyStreak, setDailyStreak] = useState(0); // Daily quiz streak
-  const [badges, setBadges] = useState([]); // Achievements
+  const [answers, setAnswers] = useState({});
+  const [points, setPoints] = useState(0);
+  const [xp, setXP] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [streak, setStreak] = useState(0);
+  const [dailyStreak, setDailyStreak] = useState(0);
+  const [badges, setBadges] = useState([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const [quizCompleted, setQuizCompleted] = useState(false);
-  const [showReviewScreen, setShowReviewScreen] = useState(false); // Review screen
-  const [timeLeft, setTimeLeft] = useState(30); // 30 seconds per question
-  const [timeTaken, setTimeTaken] = useState(0); // Track time per question
-  const [timeTakenPerQuestion, setTimeTakenPerQuestion] = useState({}); // Track time for all questions
-  const [hintUsed, setHintUsed] = useState(false); // Track if hint is used
-  const [fiftyFiftyUsed, setFiftyFiftyUsed] = useState(false); // Track 50/50 lifeline
-  const [flaggedQuestions, setFlaggedQuestions] = useState([]); // Flagged questions
-  const [questionRatings, setQuestionRatings] = useState({}); // Question ratings
-  const [comments, setComments] = useState({}); // Mock comments per question
-  const [reportedIssues, setReportedIssues] = useState([]); // Reported issues
-  const [leaderboardType, setLeaderboardType] = useState("global"); // Leaderboard type
-  const [userLeaderboard, setUserLeaderboard] = useState(mockLeaderboards.global); // Leaderboard
-  const [quizCount, setQuizCount] = useState(0); // Track number of quizzes completed
+  const [showReviewScreen, setShowReviewScreen] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeTaken, setTimeTaken] = useState(0);
+  const [timeTakenPerQuestion, setTimeTakenPerQuestion] = useState({});
+  const [hintUsed, setHintUsed] = useState(false);
+  const [fiftyFiftyUsed, setFiftyFiftyUsed] = useState(false);
+  const [flaggedQuestions, setFlaggedQuestions] = useState([]);
+  const [questionRatings, setQuestionRatings] = useState({});
+  const [comments, setComments] = useState({});
+  const [reportedIssues, setReportedIssues] = useState([]);
+  const [quizCount, setQuizCount] = useState(0);
 
   // Generate quiz data on mount or when selections change
   useEffect(() => {
@@ -131,36 +111,33 @@ const QuizPage = () => {
     let newPoints = points;
     let newXP = xp;
 
-    // Update answers and time taken
     setAnswers({ ...answers, [currentQIndex]: selectedOption });
     setTimeTakenPerQuestion({ ...timeTakenPerQuestion, [currentQIndex]: timeTaken });
 
-    // Calculate points and XP
     if (selectedOption === correct) {
-      newPoints += 1; // Base point for correct answer
-      newXP += 10; // 10 XP per correct answer
+      newPoints += 1;
+      newXP += 10;
       const newStreak = streak + 1;
       setStreak(newStreak);
-      if (newStreak >= 3) newPoints += 1; // Bonus for streak
+      if (newStreak >= 3) newPoints += 1;
       if (timeTaken < 10 && !badges.includes("Speedy Thinker")) {
         setBadges([...badges, "Speedy Thinker"]);
-        newPoints += 0.5; // Bonus for speed
+        newPoints += 0.5;
       }
       setFeedback("Correct!");
       toast.success("Great job!", { position: "top-right", autoClose: 2000 });
     } else {
-      setStreak(0); // Reset streak on wrong answer
+      setStreak(0);
       setFeedback(`Wrong! Correct answer: ${correct}`);
       toast.error("Try again next time!", { position: "top-right", autoClose: 2000 });
     }
 
-    // Apply penalties
     if (hintUsed) newPoints -= 0.5;
     if (fiftyFiftyUsed) newPoints -= 0.5;
 
     setPoints(Math.max(0, newPoints));
     setXP(newXP);
-    setLevel(Math.floor(newXP / 50) + 1); // Level up every 50 XP
+    setLevel(Math.floor(newXP / 50) + 1);
     setIsSubmitted(true);
   };
 
@@ -232,57 +209,31 @@ const QuizPage = () => {
   // Final submission
   const handleFinalSubmit = () => {
     setShowReviewScreen(false);
-    setQuizCompleted(true);
     setQuizCount(quizCount + 1);
-    setDailyStreak(dailyStreak + 1); // Increment daily streak (mock implementation)
+    setDailyStreak(dailyStreak + 1);
 
-    // Award badges for milestones
     if (quizCount + 1 >= 10 && !badges.includes("Quiz Master")) {
       setBadges([...badges, "Quiz Master"]);
     }
 
-    // Update leaderboard
-    const updatedLeaderboard = [
-      ...mockLeaderboards[leaderboardType],
-      { name: "You", points },
-    ].sort((a, b) => b.points - a.points);
-    setUserLeaderboard(updatedLeaderboard);
-  };
-
-  // Restart quiz
-  const handleRestart = () => {
-    setCurrentQIndex(0);
-    setPoints(0);
-    setXP(xp); // Retain XP across quizzes
-    setStreak(0);
-    setAnswers({});
-    setFlaggedQuestions([]);
-    setTimeTakenPerQuestion({});
-    setSelectedOption("");
-    setIsSubmitted(false);
-    setQuizCompleted(false);
-    setShowReviewScreen(false);
-    setTimeLeft(30);
-    setTimeTaken(0);
-    setQuizData(generateQuizData(topic, numQuestions, difficulty));
-    setUserLeaderboard(mockLeaderboards[leaderboardType]); // Reset leaderboard
-  };
-
-  // Share score on social media
-  const handleShareScore = () => {
-    const tweetText = `I scored ${points} points on a ${category} - ${topic} quiz! Can you beat my score? 🎉 #QuizChallenge`;
-    const tweetUrl = encodeURIComponent("https://your-quiz-app.com");
-    window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${tweetUrl}`,
-      "_blank"
-    );
-  };
-
-  // Generate shareable certificate link
-  const generateCertificateLink = () => {
-    return `https://your-quiz-app.com/certificate?user=You&points=${points}&topic=${encodeURIComponent(
-      topic
-    )}`;
+    navigate("/quiz-completion", {
+      state: {
+        quizData,
+        answers,
+        points,
+        xp,
+        level,
+        dailyStreak: dailyStreak + 1,
+        badges: quizCount + 1 >= 10 && !badges.includes("Quiz Master")
+          ? [...badges, "Quiz Master"]
+          : badges,
+        timeTakenPerQuestion,
+        category,
+        topic,
+        numQuestions,
+        difficulty,
+      },
+    });
   };
 
   // Rate question
@@ -304,38 +255,6 @@ const QuizPage = () => {
   const handleReportIssue = (issue) => {
     setReportedIssues([...reportedIssues, { question: currentQIndex, issue }]);
     toast.success("Issue reported successfully!", { position: "top-right", autoClose: 2000 });
-  };
-
-  // Calculate performance analysis
-  const calculatePerformance = () => {
-    const correctCount = Object.values(answers).filter(
-      (ans, idx) => ans === quizData[idx].answer
-    ).length;
-    const percentage = (correctCount / quizData.length) * 100;
-
-    // Topic-wise breakdown
-    const subTopicBreakdown = {};
-    quizData.forEach((q, idx) => {
-      const subTopic = q.subTopic;
-      if (!subTopicBreakdown[subTopic]) {
-        subTopicBreakdown[subTopic] = { correct: 0, total: 0 };
-      }
-      subTopicBreakdown[subTopic].total += 1;
-      if (answers[idx] === q.answer) {
-        subTopicBreakdown[subTopic].correct += 1;
-      }
-    });
-
-    // Strengths and weaknesses
-    const strengths = [];
-    const weaknesses = [];
-    Object.entries(subTopicBreakdown).forEach(([subTopic, { correct, total }]) => {
-      const subTopicPercentage = (correct / total) * 100;
-      if (subTopicPercentage >= 75) strengths.push(subTopic);
-      if (subTopicPercentage <= 25) weaknesses.push(subTopic);
-    });
-
-    return { correctCount, percentage, subTopicBreakdown, strengths, weaknesses };
   };
 
   // Loading state
@@ -387,186 +306,6 @@ const QuizPage = () => {
     );
   }
 
-  // Quiz completion screen
-  if (quizCompleted) {
-    const { correctCount, percentage, subTopicBreakdown, strengths, weaknesses } =
-      calculatePerformance();
-
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen text-white p-10 bg-gradient-to-b from-gray-900 to-black">
-        <h2 className="text-3xl font-bold mb-4">Quiz Completed!</h2>
-        <p className="text-xl mb-2">Total Points: {points}</p>
-        <p className="text-xl mb-2">XP Earned: {xp}</p>
-        <p className="text-xl mb-2">Level: {level}</p>
-        <p className="text-xl mb-2">Daily Streak: {dailyStreak} days</p>
-        <p className="text-xl mb-4">
-          Score: {correctCount} / {quizData.length} ({percentage.toFixed(2)}%)
-        </p>
-
-        {/* Achievements */}
-        {badges.length > 0 && (
-          <div className="mb-4">
-            <p className="text-lg font-semibold">Achievements Unlocked:</p>
-            {badges.map((badge, index) => (
-              <span
-                key={index}
-                className="inline-block bg-yellow-500 text-black px-2 py-1 rounded mr-2"
-              >
-                {badge}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Topic-wise Breakdown */}
-        <div className="w-full max-w-md mb-4">
-          <h3 className="text-xl font-semibold mb-2">Performance Breakdown</h3>
-          <div className="bg-gray-800 p-4 rounded-lg">
-            {Object.entries(subTopicBreakdown).map(([subTopic, { correct, total }]) => (
-              <div key={subTopic} className="flex justify-between py-2">
-                <span>{subTopic}</span>
-                <span>
-                  {correct}/{total} ({((correct / total) * 100).toFixed(2)}%)
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Strengths and Weaknesses */}
-        <div className="w-full max-w-md mb-4">
-          <h3 className="text-xl font-semibold mb-2">Analysis</h3>
-          <div className="bg-gray-800 p-4 rounded-lg">
-            {strengths.length > 0 && (
-              <p>
-                <strong>Strengths:</strong> {strengths.join(", ")}
-              </p>
-            )}
-            {weaknesses.length > 0 && (
-              <p>
-                <strong>Areas to Improve:</strong> {weaknesses.join(", ")}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Time-Taken Analytics */}
-        <div className="w-full max-w-md mb-4">
-          <h3 className="text-xl font-semibold mb-2">Time-Taken Analytics</h3>
-          <div className="bg-gray-800 p-4 rounded-lg">
-            {quizData.map((q, idx) => (
-              <div key={idx} className="flex justify-between py-2">
-                <span>Question {idx + 1}</span>
-                <span
-                  className={
-                    timeTakenPerQuestion[idx] > 20 ? "text-red-500" : "text-white"
-                  }
-                >
-                  {timeTakenPerQuestion[idx] || 0} seconds
-                  {timeTakenPerQuestion[idx] > 20 && " (Slow)"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Wrong Answers Explanation */}
-        <div className="w-full max-w-md mb-4">
-          <h3 className="text-xl font-semibold mb-2">Review Wrong Answers</h3>
-          <div className="bg-gray-800 p-4 rounded-lg">
-            {quizData.map(
-              (q, idx) =>
-                answers[idx] &&
-                answers[idx] !== q.answer && (
-                  <div key={idx} className="py-2 border-b border-gray-600">
-                    <p className="font-semibold">
-                      Question {idx + 1}: {q.question}
-                    </p>
-                    <p>Your Answer: {answers[idx]}</p>
-                    <p>Correct Answer: {q.answer}</p>
-                    <p>{q.explanation}</p>
-                  </div>
-                )
-            )}
-          </div>
-        </div>
-
-        {/* Leaderboard */}
-        <div className="w-full max-w-md mb-4">
-          <h3 className="text-xl font-semibold mb-2">Leaderboar</h3>
-          <div className="flex space-x-2 mb-2">
-            {["global", "friends", "classroom"].map((type) => (
-              <button
-                key={type}
-                onClick={() => {
-                  setLeaderboardType(type);
-                  setUserLeaderboard(mockLeaderboards[type]);
-                }}
-                className={`px-3 py-1 rounded ${
-                  leaderboardType === type
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-600 text-white"
-                }`}
-              >
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </button>
-            ))}
-          </div>
-          <div className="bg-gray-800 p-4 rounded-lg">
-            {userLeaderboard.map((entry, index) => (
-              <div
-                key={index}
-                className={`flex justify-between py-2 ${
-                  entry.name === "You" ? "bg-purple-600 rounded" : ""
-                }`}
-              >
-                <span>{index + 1}. {entry.name}</span>
-                <span>{entry.points} points</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Sharing Options */}
-        <div className="flex space-x-4 mb-4">
-          <button
-            className="bg-purple-700 hover:bg-purple-900 text-white px-4 py-2 rounded"
-            onClick={handleShareScore}
-          >
-            Share Your Score
-          </button>
-          <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-            onClick={() => {
-              navigator.clipboard.writeText(generateCertificateLink());
-              toast.success("Certificate link copied to clipboard!", {
-                position: "top-right",
-                autoClose: 2000,
-              });
-            }}
-          >
-            Get Certificate
-          </button>
-        </div>
-
-        <div className="flex space-x-4">
-          <button
-            className="bg-purple-700 hover:bg-purple-900 text-white px-4 py-2 rounded"
-            onClick={handleRestart}
-          >
-            Restart Quiz
-          </button>
-          <button
-            className="underline text-purple-400"
-            onClick={() => navigate("/")}
-          >
-            Back to Selection
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const currentQuestion = quizData[currentQIndex];
 
   // Quiz in progress
@@ -576,13 +315,12 @@ const QuizPage = () => {
       <h1 className="text-2xl font-bold mb-4">
         Quiz: {category} - {topic} ({difficulty})
       </h1>
-      {/* Progress Navigation */}
-      <div className="flex justify-center mb-4 space-x-2">
+      <div className="flex overflow-x-auto space-x-2 mb-4">
         {quizData.map((_, index) => (
           <button
             key={index}
             onClick={() => handleJumpToQuestion(index)}
-            className={`w-8 h-8 rounded-full ${
+            className={`w-8 h-8 rounded-full flex-shrink-0 ${
               index === currentQIndex
                 ? "bg-purple-500 text-white"
                 : answers[index]
@@ -594,7 +332,6 @@ const QuizPage = () => {
           </button>
         ))}
       </div>
-      {/* Progress Bar */}
       <div className="w-full bg-gray-700 h-2 mb-4 rounded">
         <div
           className="bg-purple-500 h-2 rounded"
@@ -649,7 +386,7 @@ const QuizPage = () => {
         <div className="flex justify-between mt-6">
           <button
             onClick={handlePrevQuestion}
-            className={`px-4 py-2 rounded-lg text-white ${
+            className={`px-4 py-2 rounded-lg text-white mr-4 ${
               currentQIndex === 0
                 ? "bg-gray-600 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700"
@@ -721,8 +458,6 @@ const QuizPage = () => {
           <div className="mt-4">
             <p className="text-lg font-medium text-center">{feedback}</p>
             <p className="text-md mt-2">{currentQuestion.explanation}</p>
-
-            {/* Question Feedback & QA */}
             <div className="mt-4 p-4 bg-gray-800 rounded-lg">
               <h3 className="text-lg font-semibold mb-2">Question Feedback</h3>
               <div className="flex space-x-4 mb-2">
@@ -770,6 +505,10 @@ const QuizPage = () => {
                     if (e.key === "Enter" && e.target.value) {
                       handleReportIssue(e.target.value);
                       e.target.value = "";
+                      toast.success("Issue reported!", {
+                        position: "top-right",
+                        autoClose: 2000,
+                      });
                     }
                   }}
                 />
@@ -782,4 +521,4 @@ const QuizPage = () => {
   );
 };
 
-export default QuizPage;
+export default QuizTakingPage;
