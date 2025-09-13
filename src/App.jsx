@@ -1,11 +1,16 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
-import { About, Feedbacks, Hero, Navbar, StarsCanvas } from "./components";
+import About from "./components/About";
+import Feedbacks from "./components/Feedbacks";
+
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
 import Footer from "./components/Footer";
 import Auth from "./components/Auth";
 import QuizSelectionPage from "./components/QuizSelectionPage";
 import QuizPage from "./components/QuizPage"; // Import your QuizPage
 import QuizCompletionPage from "./components/QuizCompletionPage";
+import StarsCanvas from './components/canvas/Stars';
 
 
 const App = () => {
@@ -18,7 +23,9 @@ const App = () => {
           
         </div>
         <About />
-        <div>
+        <div classname ="relative z-0">
+ 
+        {/* Define your routes here */}
         <Routes>
           {/* Home page - Show Navbar, Hero, About, QuizSelectionPage */}
           <Route path="/" element={<QuizSelectionPage />} />

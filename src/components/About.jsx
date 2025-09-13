@@ -6,6 +6,7 @@ import { styles } from "../styles";
 import { services } from "../constants";
 import { SectionWrapper } from "../hoc";
 
+
 gsap.registerPlugin(ScrollTrigger);
 
 const useGsap = (elementRef, animation, delay = 0) => {
@@ -96,6 +97,7 @@ const About = () => {
       <div ref={introRef}>
         <p className={styles.sectionSubText}>Introduction</p>
         <h2 className={styles.sectionHeadText}>About QuizArena</h2>
+        
         <p className="mt-4 text-secondary text-[17px] max-w-3xl leading-[30px]">
           <span className="text-[#915EFF] font-bold">Unlock Knowledge. One Quiz at a Time.</span><br />
           Welcome to QuizArena – your interactive platform to learn, play, and grow through the power of quizzes. Whether you’re a student sharpening your skills, a trivia lover testing your knowledge, or a lifelong learner exploring new horizons, QuizArena is built for everyone.
