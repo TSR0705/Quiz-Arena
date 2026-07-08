@@ -80,14 +80,14 @@ The platform features a beautiful 3D-themed interface with dynamic animations, a
 
 ---
 
-## 📁 Project Structure
+ 
 
 
 
 
 
 
-🧠 Future Enhancements
+## 🧠 Future Enhancements
 
 ✅ AI-generated adaptive quizzes
 
