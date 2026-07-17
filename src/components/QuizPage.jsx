@@ -3,6 +3,23 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { 
+  Flag, 
+  HelpCircle, 
+  Award, 
+  CheckCircle2, 
+  AlertCircle, 
+  Sparkles, 
+  Timer, 
+  ThumbsUp, 
+  CornerDownRight,
+  MessageSquare,
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Send
+} from "lucide-react";
+import { styles } from "../styles";
 
 const QuizTakingPage = () => {
   const { attemptId } = useParams();
@@ -319,44 +336,74 @@ const QuizTakingPage = () => {
   // 6. Review Screen before final submission (FR-070)
   if (showReviewScreen) {
     return (
-      <div className="p-8 text-white max-w-3xl mx-auto bg-gradient-to-b from-gray-900 to-black min-h-screen">
-        <h1 className="text-2xl font-bold mb-4">Review Your Answers</h1>
-        <p className="mb-4">Review flagged or unanswered questions before final submission.</p>
-        <div className="space-y-4">
-          {[...Array(attempt.questionsCount)].map((_, idx) => (
-            <div
-              key={idx}
-              className={`p-4 rounded-lg bg-gray-800 border ${
-                flaggedQuestions.includes(idx) ? "border-yellow-400" : "border-gray-700"
-              }`}
-            >
-              <p className="font-semibold">Question {idx + 1}</p>
-              <p className="mt-2 text-sm text-gray-300">
-                Status: {answers[idx] || (idx === attempt.currentQuestionIndex && selectedOptionId) ? "Draft Answered" : "Unanswered"}
-                {flaggedQuestions.includes(idx) && <span className="ml-2 text-yellow-400"> (Flagged)</span>}
-              </p>
-              <button
-                onClick={() => handleJumpToQuestion(idx)}
-                className="mt-2 px-4 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition"
-              >
-                Review Question
-              </button>
+      <div className={`p-6 md:p-8 text-white max-w-3xl mx-auto min-h-screen flex flex-col justify-center space-y-6 ${styles.bgMain}`}>
+        <ToastContainer />
+        <div className={styles.card}>
+          <div className="flex items-center gap-3 border-b border-[#2a2a40] pb-4 mb-6">
+            <Sparkles className="w-6 h-6 text-yellow-500" />
+            <div>
+              <h2 className={styles.h2}>Review Your Answers</h2>
+              <p className={styles.subtext}>Check flagged or unanswered questions before submitting</p>
             </div>
-          ))}
-        </div>
-        <div className="flex justify-between mt-6">
-          <button
-            onClick={() => setShowReviewScreen(false)}
-            className="px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
-          >
-            Back to Quiz
-          </button>
-          <button
-            onClick={handleFinalSubmit}
-            className="px-6 py-2 bg-green-600 text-white rounded font-bold hover:bg-green-700 transition"
-          >
-            Submit Quiz
-          </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[380px] overflow-y-auto pr-2">
+            {[...Array(attempt.questionsCount)].map((_, idx) => {
+              const isAnswered = answers[idx] !== undefined || (idx === attempt.currentQuestionIndex && selectedOptionId);
+              const isFlagged = flaggedQuestions.includes(idx);
+              return (
+                <div
+                  key={idx}
+                  className={`p-4 rounded-xl border flex flex-col justify-between gap-3 transition duration-150 ${
+                    isFlagged 
+                      ? "border-yellow-500 bg-yellow-500/5" 
+                      : isAnswered
+                      ? "border-green-500/20 bg-green-500/5"
+                      : "border-[#2a2a40] bg-[#202038]/30"
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <p className="font-bold text-sm text-white">Question {idx + 1}</p>
+                    <div className="flex gap-1.5">
+                      {isFlagged && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/25">
+                          Flagged
+                        </span>
+                      )}
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        isAnswered 
+                          ? "bg-green-500/10 text-green-400 border border-green-500/25" 
+                          : "bg-red-500/10 text-red-400 border border-red-500/25"
+                      }`}>
+                        {isAnswered ? "Draft Saved" : "Unanswered"}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleJumpToQuestion(idx)}
+                    className={`${styles.btnSecondary} text-xs py-1.5 w-full`}
+                  >
+                    Jump to Question
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-between gap-4 mt-8 border-t border-[#2a2a40] pt-6">
+            <button
+              onClick={() => setShowReviewScreen(false)}
+              className={styles.btnSecondary}
+            >
+              Back to Quiz
+            </button>
+            <button
+              onClick={handleFinalSubmit}
+              className={`${styles.btnPrimary} bg-green-600 hover:bg-green-700`}
+            >
+              Submit Quiz Paper
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -364,187 +411,250 @@ const QuizTakingPage = () => {
 
   // 7. Quiz taking main page
   return (
-    <div className="p-8 text-white max-w-3xl mx-auto bg-gradient-to-b from-gray-900 to-black min-h-screen">
+    <div className={`p-6 md:p-8 text-white max-w-3xl mx-auto min-h-screen flex flex-col justify-center space-y-6 ${styles.bgMain}`}>
       <ToastContainer />
-      <h1 className="text-2xl font-bold mb-4">
-        Quiz Attempt - {attempt.quizMode === "practice" ? "Practice" : "Assessment"} Mode
-      </h1>
-
-      {/* Navigator panel (FR-041, FR-042) */}
-      <div className="flex overflow-x-auto space-x-2 mb-4 p-2 bg-gray-800 rounded">
-        {[...Array(attempt.questionsCount)].map((_, index) => (
-          <button
-            key={index}
-            onClick={() => (attempt.quizMode === "assessment" || index <= attempt.currentQuestionIndex) && handleJumpToQuestion(index)}
-            className={`w-8 h-8 rounded-full flex-shrink-0 font-semibold transition ${
-              index === attempt.currentQuestionIndex
-                ? "bg-purple-500 text-white ring-2 ring-white"
-                : index < attempt.currentQuestionIndex
-                ? "bg-green-600 text-white"
-                : "bg-gray-700 text-gray-400 cursor-not-allowed"
-            } ${flaggedQuestions.includes(index) ? "border-2 border-yellow-400" : ""}`}
-            disabled={attempt.quizMode === "practice" && index > attempt.currentQuestionIndex}
-          >
-            {index + 1}
-          </button>
-        ))}
-      </div>
-
-      <div className="w-full bg-gray-700 h-2 mb-4 rounded">
-        <div
-          className="bg-purple-500 h-2 rounded transition-all duration-300"
-          style={{ width: `${((attempt.currentQuestionIndex + 1) / attempt.questionsCount) * 100}%` }}
-        ></div>
-      </div>
-
-      <div className="flex justify-between mb-4">
-        <h2 className="text-xl font-semibold">
-          Question {attempt.currentQuestionIndex + 1} of {attempt.questionsCount}
-        </h2>
-        <p className={`text-lg font-bold ${timeLeft <= 10 ? "text-red-500 animate-pulse" : "text-white"}`}>
-          {attempt.quizMode === "practice" ? `Time Left: ${timeLeft}s` : `Total Time: ${Math.floor(timeLeft / 60)}m ${timeLeft % 60}s`}
-        </p>
-      </div>
-
-      <motion.div
-        key={attempt.currentQuestionIndex}
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <p className="text-lg mb-6 p-4 bg-gray-800 rounded border border-gray-700">
-          {currentQuestion.questionText}
-        </p>
-
-        {/* Options grid */}
-        <div className="space-y-3">
-          {currentQuestion.options.map((option) => {
-            const isEliminated = eliminatedOptions.includes(option.id);
-            return (
-              <button
-                key={option.id}
-                onClick={() => !isSubmitted && !isEliminated && setSelectedOptionId(option.id)}
-                className={`w-full p-4 text-left rounded-lg border transition duration-200 ${
-                  isEliminated
-                    ? "bg-gray-900 text-gray-600 border-gray-800 cursor-not-allowed line-through"
-                    : isSubmitted
-                    ? option.id === selectedOptionId
-                      ? "bg-purple-600 text-white border-purple-500"
-                      : "bg-gray-800 text-gray-400 border-gray-700"
-                    : selectedOptionId === option.id
-                    ? "bg-purple-600 text-white border-purple-500"
-                    : "bg-gray-800 text-white hover:bg-gray-700 border-gray-700"
-                }`}
-                disabled={isSubmitted || isEliminated}
-              >
-                {option.text}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Action buttons (FR-043, FR-051, FR-052) */}
-        <div className="flex justify-between mt-8">
-          <button
-            onClick={handlePrevQuestion}
-            className={`px-6 py-2 rounded-lg text-white font-semibold transition ${
-              attempt.currentQuestionIndex === 0
-                ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-            disabled={attempt.currentQuestionIndex === 0}
-          >
-            Previous
-          </button>
-
-          <div className="flex space-x-3">
-            <button
-              onClick={toggleFlagQuestion}
-              className={`px-4 py-2 rounded-lg text-white font-semibold transition ${
-                flaggedQuestions.includes(attempt.currentQuestionIndex)
-                  ? "bg-yellow-600 hover:bg-yellow-700"
-                  : "bg-gray-700 hover:bg-gray-600"
-              }`}
-            >
-              {flaggedQuestions.includes(attempt.currentQuestionIndex) ? "Unflag" : "Flag"}
-            </button>
-
-            {!isSubmitted && (
-              <>
-                <button
-                  onClick={handleHint}
-                  className={`px-4 py-2 rounded-lg text-white font-semibold transition ${
-                    hintUsed ? "bg-gray-700 text-gray-500 cursor-not-allowed" : "bg-yellow-600 hover:bg-yellow-700"
-                  }`}
-                  disabled={hintUsed}
-                >
-                  Hint
-                </button>
-                <button
-                  onClick={handleFiftyFifty}
-                  className={`px-4 py-2 rounded-lg text-white font-semibold transition ${
-                    fiftyFiftyUsed ? "bg-gray-700 text-gray-500 cursor-not-allowed" : "bg-yellow-600 hover:bg-yellow-700"
-                  }`}
-                  disabled={fiftyFiftyUsed}
-                >
-                  50/50
-                </button>
-              </>
-            )}
-
-            {!isSubmitted ? (
-              <button
-                onClick={handleSubmitAnswer}
-                className={`px-6 py-2 rounded-lg font-bold transition ${
-                  selectedOptionId ? "bg-green-600 hover:bg-green-700 text-white" : "bg-gray-700 text-gray-500 cursor-not-allowed"
-                }`}
-                disabled={!selectedOptionId}
-              >
-                {attempt.quizMode === "practice" ? "Submit Answer" : "Save Answer"}
-              </button>
-            ) : (
-              <button
-                onClick={handleNextQuestion}
-                className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition"
-              >
-                {attempt.currentQuestionIndex + 1 < attempt.questionsCount ? "Next" : "Review"}
-              </button>
-            )}
+      
+      <div className={styles.card}>
+        {/* Header Title info */}
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-[#2a2a40] pb-4 mb-6">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-white capitalize">
+              {attempt.quizMode === "practice" ? "⚡ Practice Session" : "🏆 Assessment Run"}
+            </h2>
+            <p className={styles.subtext}>Answer carefully and watch the timer</p>
+          </div>
+          {/* Global / Local Timer */}
+          <div className="flex items-center gap-2 px-3.5 py-1.5 bg-[#202038] border border-[#2a2a4c] rounded-xl self-start sm:self-auto">
+            <Timer className={`w-4 h-4 ${timeLeft <= 10 ? "text-red-500 animate-pulse" : "text-[#915EFF]"}`} />
+            <span className={`text-sm font-mono font-bold ${timeLeft <= 10 ? "text-red-400" : "text-white"}`}>
+              {attempt.quizMode === "practice" 
+                ? `${timeLeft}s` 
+                : `${Math.floor(timeLeft / 60)}m ${timeLeft % 60}s`}
+            </span>
           </div>
         </div>
 
-        {/* Feedback area for Practice Mode */}
-        {isSubmitted && attempt.quizMode === "practice" && (
-          <div className="mt-6 p-4 bg-gray-800 rounded border border-gray-700 animate-fadeIn">
-            <p className="text-xl font-bold text-center mb-2">{feedback}</p>
-            <p className="text-gray-300 text-sm leading-relaxed mb-4">{explanation}</p>
-            
-            {/* Rating & Reports (FR-120, FR-121) */}
-            <div className="border-t border-gray-700 pt-4 flex justify-between items-center text-sm">
-              <div className="flex items-center space-x-2">
-                <span>Rate:</span>
-                <button onClick={() => handleRateQuestion("helpful")} className="px-2 py-1 bg-green-900 rounded hover:bg-green-800">👍 Helpful</button>
-                <button onClick={() => handleRateQuestion("confusing")} className="px-2 py-1 bg-yellow-950 rounded hover:bg-yellow-900">😕 Confusing</button>
-                <button onClick={() => handleRateQuestion("incorrect")} className="px-2 py-1 bg-red-950 rounded hover:bg-red-900">👎 Incorrect</button>
-              </div>
+        {/* Navigator Circles */}
+        <div className="space-y-2 mb-6">
+          <label className="text-xs font-semibold text-gray-400">Navigation Map</label>
+          <div className="flex flex-wrap gap-2 p-3 bg-[#202038]/40 border border-[#2a2a40] rounded-xl">
+            {[...Array(attempt.questionsCount)].map((_, index) => {
+              const isCurrent = index === attempt.currentQuestionIndex;
+              const isFlagged = flaggedQuestions.includes(index);
+              const isPracticeCompleted = attempt.quizMode === "practice" && index < attempt.currentQuestionIndex;
+              const isAssessmentCompleted = attempt.quizMode === "assessment" && answers[index] !== undefined;
 
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  placeholder="Report issue..."
-                  className="bg-gray-900 text-white text-xs p-1.5 rounded focus:outline-none focus:ring-1 focus:ring-purple-500 w-40"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && e.target.value) {
-                      handleReportIssue("content_error", e.target.value);
-                      e.target.value = "";
-                    }
-                  }}
-                />
-              </div>
-            </div>
+              return (
+                <button
+                  key={index}
+                  onClick={() => (attempt.quizMode === "assessment" || index <= attempt.currentQuestionIndex) && handleJumpToQuestion(index)}
+                  className={`w-9 h-9 rounded-xl font-bold text-xs flex items-center justify-center transition-all duration-200 border cursor-pointer ${
+                    isCurrent
+                      ? "bg-[#915EFF] border-[#915EFF] text-white shadow-md shadow-[#915EFF]/25 scale-110 z-10"
+                      : isPracticeCompleted || isAssessmentCompleted
+                      ? "bg-green-500/10 border-green-500/20 text-green-400"
+                      : "bg-[#2e2e4d]/30 border-[#3e3e5f] text-gray-400 hover:text-white"
+                  } ${isFlagged ? "border-yellow-500" : ""}`}
+                  disabled={attempt.quizMode === "practice" && index > attempt.currentQuestionIndex}
+                  title={`Question ${index + 1}`}
+                >
+                  {index + 1}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Visual Progress Bar Timer for Practice Mode */}
+        {attempt.quizMode === "practice" && !isSubmitted && (
+          <div className="w-full bg-[#2a2a40]/50 h-1 rounded-full overflow-hidden mb-6">
+            <div 
+              className={`h-full transition-all duration-1000 ease-linear ${timeLeft <= 10 ? 'bg-red-500' : 'bg-[#915EFF]'}`} 
+              style={{ width: `${(timeLeft / 30) * 100}%` }}
+            />
           </div>
         )}
-      </motion.div>
+
+        {/* Question Header */}
+        <div className="flex justify-between items-center mb-4 text-xs font-semibold text-gray-400">
+          <span>QUESTION {attempt.currentQuestionIndex + 1} OF {attempt.questionsCount}</span>
+          <span className="capitalize px-2 py-0.5 rounded bg-[#202038] text-gray-400 border border-[#2a2a40]">
+            {attempt.difficulty}
+          </span>
+        </div>
+
+        {/* Animated Question Body */}
+        <motion.div
+          key={attempt.currentQuestionIndex}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="space-y-6"
+        >
+          <div className="p-5 bg-[#202038]/50 border border-[#2a2a40] rounded-xl text-white font-medium text-base leading-relaxed">
+            {currentQuestion.questionText}
+          </div>
+
+          {/* Options Grid */}
+          <div className="flex flex-col gap-3">
+            {currentQuestion.options.map((option) => {
+              const isEliminated = eliminatedOptions.includes(option.id);
+              
+              // Correctness state mappings for Practice Mode Feedback
+              let cardStyle = "bg-[#202038]/30 border-[#2a2a40] text-gray-200 hover:border-[#915EFF]/50 hover:bg-[#202038]/50";
+              
+              if (isEliminated) {
+                cardStyle = "bg-gray-900/40 border-gray-800/40 text-gray-600 cursor-not-allowed line-through";
+              } else if (isSubmitted) {
+                if (option.id === selectedOptionId) {
+                  // User selected this option
+                  const isCorrect = currentQuestion.correctOptionIds?.includes(option.id) || feedback === "Correct!";
+                  cardStyle = isCorrect 
+                    ? "bg-green-500/10 border-green-500 text-green-400 font-bold" 
+                    : "bg-red-500/10 border-red-500 text-red-400 font-bold";
+                } else if (currentQuestion.correctOptionIds?.includes(option.id)) {
+                  // Correct option that user did NOT select
+                  cardStyle = "bg-green-500/5 border-green-500/40 text-green-400";
+                } else {
+                  cardStyle = "bg-[#202038]/10 border-[#2a2a40]/30 text-gray-500";
+                }
+              } else if (selectedOptionId === option.id) {
+                // Draft selection
+                cardStyle = "bg-[#915EFF]/10 border-[#915EFF] text-white shadow-md shadow-[#915EFF]/5 font-semibold";
+              }
+
+              return (
+                <button
+                  key={option.id}
+                  onClick={() => !isSubmitted && !isEliminated && setSelectedOptionId(option.id)}
+                  className={`w-full p-4.5 text-left rounded-xl border transition-all duration-150 active:scale-[0.99] text-sm cursor-pointer ${cardStyle}`}
+                  disabled={isSubmitted || isEliminated}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex w-5 h-5 rounded-full border border-current items-center justify-center text-[10px] shrink-0 opacity-60">
+                      {option.id.replace("opt_", "")}
+                    </span>
+                    <span>{option.text}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Action Row */}
+          <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center gap-4 mt-8 border-t border-[#2a2a40] pt-6">
+            <button
+              onClick={handlePrevQuestion}
+              className={`${styles.btnSecondary} flex items-center justify-center gap-1 text-xs`}
+              disabled={attempt.currentQuestionIndex === 0}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Previous</span>
+            </button>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={toggleFlagQuestion}
+                className={`text-xs px-4 py-2.5 rounded-xl border font-bold transition duration-200 cursor-pointer ${
+                  flaggedQuestions.includes(attempt.currentQuestionIndex)
+                    ? "bg-yellow-500/10 border-yellow-500 text-yellow-400"
+                    : "bg-[#2e2e4d]/30 border-[#3e3e5f] text-gray-400 hover:text-white"
+                }`}
+              >
+                {flaggedQuestions.includes(attempt.currentQuestionIndex) ? "Unflag" : "Flag"}
+              </button>
+
+              {!isSubmitted && (
+                <>
+                  <button
+                    onClick={handleHint}
+                    className={`text-xs px-4 py-2.5 rounded-xl border font-bold transition duration-200 cursor-pointer bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/15 disabled:opacity-50 disabled:cursor-not-allowed`}
+                    disabled={hintUsed}
+                  >
+                    Hint
+                  </button>
+                  <button
+                    onClick={handleFiftyFifty}
+                    className={`text-xs px-4 py-2.5 rounded-xl border font-bold transition duration-200 cursor-pointer bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/15 disabled:opacity-50 disabled:cursor-not-allowed`}
+                    disabled={fiftyFiftyUsed}
+                  >
+                    50/50
+                  </button>
+                </>
+              )}
+
+              {!isSubmitted ? (
+                <button
+                  onClick={handleSubmitAnswer}
+                  className={`${styles.btnPrimary} text-xs py-2.5 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  disabled={!selectedOptionId}
+                >
+                  {attempt.quizMode === "practice" ? "Submit Answer" : "Save Answer"}
+                </button>
+              ) : (
+                <button
+                  onClick={handleNextQuestion}
+                  className={`${styles.btnPrimary} text-xs py-2.5 bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-1`}
+                >
+                  <span>{attempt.currentQuestionIndex + 1 < attempt.questionsCount ? "Next Question" : "Review Paper"}</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Feedback area for Practice Mode */}
+          {isSubmitted && attempt.quizMode === "practice" && (
+            <div className="mt-6 p-5 bg-[#202038]/40 border border-[#2a2a40] rounded-xl space-y-4">
+              <div className="flex items-center gap-2 border-b border-[#2a2a40]/50 pb-2.5">
+                {feedback === "Correct!" ? (
+                  <CheckCircle2 className="w-5 h-5 text-green-400" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-red-400" />
+                )}
+                <h4 className={`text-md font-bold ${feedback === "Correct!" ? "text-green-400" : "text-red-400"}`}>
+                  {feedback}
+                </h4>
+              </div>
+              
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1">
+                  <CornerDownRight className="w-3.5 h-3.5" />
+                  <span>Explanation Details</span>
+                </span>
+                <p className="text-xs text-gray-300 leading-relaxed font-sans font-medium bg-[#131326] p-3 rounded-lg border border-[#2a2a40]">
+                  {explanation}
+                </p>
+              </div>
+              
+              {/* Rating & Reports (FR-120, FR-121) */}
+              <div className="border-t border-[#2a2a40]/50 pt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400 font-semibold">Rate Question:</span>
+                  <button onClick={() => handleRateQuestion("helpful")} className="px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 hover:bg-green-500/20 font-medium transition cursor-pointer border-none">👍 Helpful</button>
+                  <button onClick={() => handleRateQuestion("confusing")} className="px-2.5 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-400 hover:bg-yellow-500/20 font-medium transition cursor-pointer border-none">😕 Confusing</button>
+                  <button onClick={() => handleRateQuestion("incorrect")} className="px-2.5 py-1 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 hover:bg-red-500/20 font-medium transition cursor-pointer border-none">👎 Bad</button>
+                </div>
+
+                <div className="flex items-center gap-2 bg-[#131326] border border-[#2a2a40] p-1 rounded-xl shrink-0 w-full sm:w-auto">
+                  <input
+                    type="text"
+                    placeholder="Report content typo..."
+                    className="bg-transparent text-white text-[10px] px-2 py-1 outline-none border-none w-full sm:w-36 placeholder:text-gray-600"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && e.target.value) {
+                        handleReportIssue("content_error", e.target.value);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                  <span className="text-[10px] text-gray-500 px-2 select-none">Enter</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </div>
     </div>
   );
 };

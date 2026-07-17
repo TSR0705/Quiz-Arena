@@ -46,9 +46,9 @@ const DashboardLayout = () => {
   }
 
   return (
-    <div className={`min-h-screen ${styles.bgMain} text-white flex flex-row relative font-sans`}>
+    <div className={`h-screen w-screen overflow-hidden ${styles.bgMain} text-white flex flex-row relative font-sans`}>
       {/* LEFT SIDEBAR (Desktop) */}
-      <aside className={`hidden md:flex flex-col w-64 ${styles.bgCard} border-r border-[#2a2a40] shrink-0 p-6 justify-between z-10`}>
+      <aside className={`hidden md:flex flex-col w-64 ${styles.bgCard} border-r border-[#2a2a40] shrink-0 p-6 justify-between h-screen overflow-y-auto no-scrollbar select-none z-10`}>
         <div className="flex flex-col gap-8">
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center gap-3 active:scale-95 transition duration-150">
@@ -151,9 +151,9 @@ const DashboardLayout = () => {
       </aside>
 
       {/* RIGHT CONTENT WORKSPACE */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen relative overflow-x-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-screen relative overflow-hidden">
         {/* TOP NAVBAR */}
-        <header className="h-18 border-b border-[#2a2a40] px-6 md:px-8 flex items-center justify-between shrink-0 sticky top-0 bg-[#0d0d1e]/80 backdrop-blur-md z-30">
+        <header className="h-18 border-b border-[#2a2a40] px-6 md:px-8 flex items-center justify-between shrink-0 bg-[#0d0d1e]/85 backdrop-blur-md z-30">
           <div className="flex items-center gap-3">
             {/* Hamburger trigger for mobile */}
             <button 
@@ -202,7 +202,7 @@ const DashboardLayout = () => {
         </header>
 
         {/* WORKSPACE VIEW PORT */}
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-6xl w-full mx-auto">
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto no-scrollbar max-w-6xl w-full mx-auto">
           <Outlet />
         </main>
       </div>

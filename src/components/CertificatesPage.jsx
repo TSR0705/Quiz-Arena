@@ -7,8 +7,7 @@ import {
   CheckCircle, 
   ExternalLink,
   ShieldCheck,
-  ShieldAlert,
-  Loader
+  ShieldAlert
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 

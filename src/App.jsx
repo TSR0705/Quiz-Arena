@@ -16,6 +16,7 @@ import LeaderboardPage from "./components/LeaderboardPage";
 import CertificatesPage from "./components/CertificatesPage";
 import ProfilePage from "./components/ProfilePage";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // The Landing Page layout enclosing marketing & selection components (marketing only)
 const Home = () => {
@@ -95,7 +96,9 @@ const App = () => {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardLayout />
+                <ErrorBoundary>
+                  <DashboardLayout />
+                </ErrorBoundary>
               </ProtectedRoute>
             }
           >
@@ -111,7 +114,9 @@ const App = () => {
             path="/quiz/:attemptId"
             element={
               <ProtectedRoute>
-                <QuizPage />
+                <ErrorBoundary>
+                  <QuizPage />
+                </ErrorBoundary>
               </ProtectedRoute>
             }
           />
@@ -121,7 +126,9 @@ const App = () => {
             path="/results/:attemptId"
             element={
               <ProtectedRoute>
-                <QuizCompletionPage />
+                <ErrorBoundary>
+                  <QuizCompletionPage />
+                </ErrorBoundary>
               </ProtectedRoute>
             }
           />

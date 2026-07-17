@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { styles } from "../styles";
-import { Trophy, Calendar, Filter, Star, ShieldAlert } from "lucide-react";
+import { Trophy, Calendar, Filter, Star, ShieldAlert, Compass } from "lucide-react";
 
 const LeaderboardPage = () => {
   const [categories, setCategories] = useState([]);

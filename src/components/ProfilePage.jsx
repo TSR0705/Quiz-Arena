@@ -8,7 +8,6 @@ import {
   Save, 
   Key, 
   Trophy, 
-  Compass, 
   ShieldAlert 
 } from "lucide-react";
 
