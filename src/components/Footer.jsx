@@ -16,7 +16,7 @@ const Footer = () => {
     return emailRegex.test(email);
   };
 
-  const handleSubscribe = () => {
+  const handleSubscribe = async () => {
     if (!email) {
       setSubscriptionMessage("Please enter an email address.");
       setTimeout(() => setSubscriptionMessage(""), 3000);
@@ -29,14 +29,26 @@ const Footer = () => {
       return;
     }
 
-    // Simulate API call with loading state
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSubscriptionMessage(data.message || "Thank you for subscribing!");
+        setEmail("");
+      } else {
+        setSubscriptionMessage(data.error?.message || "Failed to subscribe.");
+      }
+    } catch (err) {
+      setSubscriptionMessage("Network error occurred.");
+    } finally {
       setIsLoading(false);
-      setSubscriptionMessage("Thank you for subscribing!");
-      setEmail("");
-      setTimeout(() => setSubscriptionMessage(""), 3000);
-    }, 1000); // Simulated 1-second delay
+      setTimeout(() => setSubscriptionMessage(""), 4000);
+    }
   };
 
   // Scroll-triggered animation logic

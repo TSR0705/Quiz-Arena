@@ -1,265 +1,229 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// Mock leaderboard data
-const mockLeaderboards = {
-  global: [
-    { name: "User1", points: 150 },
-    { name: "User2", points: 120 },
-    { name: "User3", points: 100 },
-  ],
-  friends: [
-    { name: "Friend1", points: 130 },
-    { name: "Friend2", points: 110 },
-  ],
-  classroom: [
-    { name: "Student1", points: 140 },
-    { name: "Student2", points: 90 },
-  ],
-};
-
 const QuizCompletionPage = () => {
-  const location = useLocation();
+  const { attemptId } = useParams();
   const navigate = useNavigate();
 
-  // Extract data from location state
-  const {
-    quizData,
-    answers,
-    points,
-    xp,
-    level,
-    dailyStreak,
-    badges,
-    timeTakenPerQuestion,
-    category,
-    topic,
-    numQuestions,
-    difficulty,
-  } = location.state || {};
+  // State management
+  const [results, setResults] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [certCode, setCertCode] = useState(null);
 
-  // State for leaderboard
-  const [leaderboardType, setLeaderboardType] = useState("global");
-  const [userLeaderboard, setUserLeaderboard] = useState(mockLeaderboards.global);
+  // Fetch results and leaderboard on mount
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        // 1. Fetch attempt results
+        const res = await fetch(`/api/attempts/${attemptId}/results`);
+        if (!res.ok) {
+          throw new Error("Failed to load attempt results.");
+        }
+        const attemptData = await res.json();
+        setResults(attemptData);
 
-  // If data is missing, show an error message
-  if (!quizData || !answers) {
-    return <div className="text-center mt-10 text-white">Error: Quiz data not found.</div>;
-  }
-
-  // Calculate performance analysis
-  const calculatePerformance = () => {
-    const correctCount = Object.values(answers).filter(
-      (ans, idx) => ans === quizData[idx].answer
-    ).length;
-    const percentage = (correctCount / quizData.length) * 100;
-
-    const subTopicBreakdown = {};
-    quizData.forEach((q, idx) => {
-      const subTopic = q.subTopic;
-      if (!subTopicBreakdown[subTopic]) {
-        subTopicBreakdown[subTopic] = { correct: 0, total: 0 };
+        // 2. Fetch real leaderboard for the topic & difficulty
+        const leaderRes = await fetch(
+          `/api/leaderboard?topicId=${attemptData.answers[0]?.topicId || ""}&difficulty=${attemptData.difficulty || ""}`
+        );
+        if (leaderRes.ok) {
+          const leaderboardData = await leaderRes.json();
+          setLeaderboard(leaderboardData);
+        }
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load completion details.");
+        setLoading(false);
       }
-      subTopicBreakdown[subTopic].total += 1;
-      if (answers[idx] === q.answer) {
-        subTopicBreakdown[subTopic].correct += 1;
-      }
-    });
+    };
 
-    return { correctCount, percentage, subTopicBreakdown };
+    fetchAllData();
+  }, [attemptId]);
+
+  // Request/Generate Certificate (FR-140)
+  const handleGetCertificate = async () => {
+    try {
+      const res = await fetch("/api/certificates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ attemptId }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setCertCode(data.verificationCode);
+        toast.success("Certificate generated successfully!");
+      } else {
+        toast.error(data.error?.message || "Failed to generate certificate. Must score 100% on a 5+ question quiz.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to request certificate.");
+    }
   };
 
-  const { correctCount, percentage, subTopicBreakdown } = calculatePerformance();
-
-  // Share score on social media
+  // Share score on Twitter (FR-143)
   const handleShareScore = () => {
-    const tweetText = `I scored ${points} points on a ${category} - ${topic} quiz! Can you beat my score? 🎉 #QuizChallenge`;
-    const tweetUrl = encodeURIComponent("https://QuizArena.com");
+    if (!results) return;
+    const tweetText = `I scored ${results.totalScore}/${results.maxScore} (${results.percentage}%) on the QuizArena quiz! Can you beat my score? 🎉 #QuizArena`;
+    const tweetUrl = encodeURIComponent(window.location.origin);
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${tweetUrl}`,
       "_blank"
     );
   };
 
-  // Generate shareable certificate link
-  const generateCertificateLink = () => {
-    return `https://your-quiz-app.com/certificate?user=You&points=${points}&topic=${encodeURIComponent(
-      topic
-    )}`;
-  };
+  if (loading) {
+    return <div className="text-center mt-10 text-white">Loading results...</div>;
+  }
 
-  // Restart quiz
-  const handleRestart = () => {
-    navigate("/quizpage", {
-      state: {
-        category,
-        topic,
-        numQuestions,
-        difficulty,
-        xp,
-        dailyStreak,
-        badges,
-      },
-    });
-  };
+  if (!results) {
+    return <div className="text-center mt-10 text-white">Error: Results not found.</div>;
+  }
+
+  // Segment answers
+  const correctAnswers = results.answers.filter((a) => a.isCorrect);
+  const incorrectAnswers = results.answers.filter((a) => !a.isCorrect && !a.timedOut);
+  const timedOutAnswers = results.answers.filter((a) => a.timedOut);
 
   return (
     <div className="p-8 text-white max-w-5xl mx-auto bg-gradient-to-b from-gray-900 to-black min-h-screen">
       <ToastContainer />
-      <h2 className="text-3xl font-bold mb-4 text-center">Quiz Completed!</h2>
-      <p className="text-xl mb-2 text-center">Total Points: {points}</p>
-      <p className="text-xl mb-2 text-center">XP Earned: {xp}</p>
-      <p className="text-xl mb-2 text-center">Level: {level}</p>
-      <p className="text-xl mb-2 text-center">Daily Streak: {dailyStreak} days</p>
-      <p className="text-xl mb-4 text-center">
-        Score: {correctCount} / {quizData.length} ({percentage.toFixed(2)}%)
-      </p>
+      <h2 className="text-3xl font-bold mb-4 text-center text-[#915EFF]">Quiz Completed!</h2>
+      <p className="text-xl mb-2 text-center">Score: {results.totalScore} / {results.maxScore} ({results.percentage}%)</p>
+      <p className="text-xl mb-2 text-center">XP Earned: {results.xpEarned}</p>
+      <p className="text-xl mb-2 text-center">Quiz Mode: {results.quizMode === "practice" ? "Practice" : "Assessment"}</p>
+      <p className="text-xl mb-6 text-center">Time Taken: {results.timeTakenSeconds} seconds</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        {badges.length > 0 && (
-          <div className="bg-gray-800 p-4 rounded-lg">
-            <h3 className="text-xl font-semibold mb-2">Achievements Unlocked</h3>
-            {badges.map((badge, index) => (
-              <span
-                key={index}
-                className="inline-block bg-yellow-500 text-black px-2 py-1 rounded mr-2"
+        {/* Performance Breakdown */}
+        <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+          <h3 className="text-xl font-semibold mb-2">Performance Summary</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span>Correct Answers</span>
+              <span className="text-green-400 font-bold">{correctAnswers.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Incorrect Answers</span>
+              <span className="text-red-400 font-bold">{incorrectAnswers.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Timed Out/Unanswered</span>
+              <span className="text-yellow-400 font-bold">{timedOutAnswers.length}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Share & Certificate */}
+        <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+          <h3 className="text-xl font-semibold mb-3">Share & Certificates</h3>
+          <div className="space-y-4">
+            <div className="flex space-x-2">
+              <button
+                className="bg-purple-700 hover:bg-purple-900 text-white px-4 py-2 rounded text-sm transition"
+                onClick={handleShareScore}
               >
-                {badge}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <h3 className="text-xl font-semibold mb-2">Performance Breakdown</h3>
-          <div>
-            {Object.entries(subTopicBreakdown).map(([subTopic, { correct, total }]) => (
-              <div key={subTopic} className="flex justify-between py-2">
-                <span>{subTopic}</span>
-                <span>
-                  {correct}/{total} ({((correct / total) * 100).toFixed(2)}%)
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <h3 className="text-xl font-semibold mb-2">Time-Taken Analytics</h3>
-          <div>
-            {quizData.map((_, idx) => (
-              <div key={idx} className="flex justify-between py-2">
-                <span>Question {idx + 1}</span>
-                <span
-                  className={
-                    timeTakenPerQuestion[idx] > 20 ? "text-red-500" : "text-white"
-                  }
+                Share Score
+              </button>
+              {results.percentage === 100 && results.maxScore >= 5 && (
+                <button
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition"
+                  onClick={handleGetCertificate}
                 >
-                  {timeTakenPerQuestion[idx] || 0} seconds
-                  {timeTakenPerQuestion[idx] > 20 && " (Slow)"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+                  Generate Certificate
+                </button>
+              )}
+            </div>
 
-        <div className="bg-gray-800 p-4 rounded-lg col-span-1 md:col-span-2">
-          <h3 className="text-xl font-semibold mb-2">Review Wrong Answers</h3>
-          <div>
-            {quizData.map(
-              (q, idx) =>
-                answers[idx] &&
-                answers[idx] !== q.answer && (
-                  <div key={idx} className="py-2 border-b border-gray-600">
-                    <p className="font-semibold">
-                      Question {idx + 1}: {q.question}
-                    </p>
-                    <p>Your Answer: {answers[idx]}</p>
-                    <p>Correct Answer: {q.answer}</p>
-                    <p>{q.explanation}</p>
-                  </div>
-                )
+            {certCode && (
+              <div className="p-3 bg-gray-900 rounded border border-purple-500 text-xs">
+                <p className="font-semibold text-purple-400 mb-1">Your Certificate ID:</p>
+                <code className="block bg-black p-1 rounded text-green-400 mb-2">{certCode}</code>
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/verify-certificate?code=${certCode}`;
+                    navigator.clipboard.writeText(url);
+                    toast.success("Certificate link copied!");
+                  }}
+                  className="text-purple-400 underline hover:text-white"
+                >
+                  Copy Verification Link
+                </button>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <h3 className="text-xl font-semibold mb-2">Leaderboard</h3>
-          <div className="flex space-x-2 mb-2">
-            {["global", "friends", "classroom"].map((type) => (
-              <button
-                key={type}
-                onClick={() => {
-                  setLeaderboardType(type);
-                  setUserLeaderboard([
-                    ...mockLeaderboards[type],
-                    { name: "You", points },
-                  ].sort((a, b) => b.points - a.points));
-                }}
-                className={`px-3 py-1 rounded ${
-                  leaderboardType === type
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-600 text-white"
-                }`}
-              >
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </button>
-            ))}
-          </div>
-          <div>
-            {userLeaderboard.map((entry, index) => (
-              <div
-                key={index}
-                className={`flex justify-between py-2 ${
-                  entry.name === "You" ? "bg-purple-600 rounded" : ""
-                }`}
-              >
-                <span>{index + 1}. {entry.name}</span>
-                <span>{entry.points} points</span>
+        {/* Real-time Leaderboard for this Quiz Setup */}
+        <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 md:col-span-2">
+          <h3 className="text-xl font-semibold mb-2">Topic Leaderboard ({results.difficulty})</h3>
+          {leaderboard.length === 0 ? (
+            <p className="text-gray-400 text-sm">No leaderboard entries found for this topic yet.</p>
+          ) : (
+            <div className="divide-y divide-gray-700 max-h-60 overflow-y-auto">
+              {leaderboard.map((entry) => (
+                <div
+                  key={entry.attemptId}
+                  className={`flex justify-between py-2.5 px-2 text-sm ${
+                    entry.attemptId === attemptId ? "bg-purple-900/40 rounded border border-purple-500" : ""
+                  }`}
+                >
+                  <span>
+                    {entry.rank}. {entry.displayName} {entry.attemptId === attemptId && "(You)"}
+                  </span>
+                  <span>
+                    {entry.score} pts ({entry.percentage}%) in {entry.timeTakenSeconds}s
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Review Incorrect/Wrong Answers */}
+        <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 col-span-1 md:col-span-2">
+          <h3 className="text-xl font-semibold mb-3">Review Explanations</h3>
+          <div className="space-y-4">
+            {results.answers.map((a, idx) => (
+              <div key={idx} className="p-3 bg-gray-900 rounded border border-gray-700 text-sm">
+                <p className="font-semibold mb-1">
+                  Question {idx + 1}: {a.questionText}
+                </p>
+                <div className="text-xs space-y-1 mb-2">
+                  <p>
+                    Your Selection:{" "}
+                    <span className={a.isCorrect ? "text-green-400 font-bold" : "text-red-400 font-bold"}>
+                      {a.selectedOptionId ? a.options.find((o) => o.id === a.selectedOptionId)?.text : "None"}
+                    </span>
+                  </p>
+                  {!a.isCorrect && (
+                    <p>
+                      Correct Selection:{" "}
+                      <span className="text-green-400 font-bold">
+                        {a.options.find((o) => a.correctOptionIds.includes(o.id))?.text || "None"}
+                      </span>
+                    </p>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400 italic">Explanation: {a.explanation}</p>
               </div>
             ))}
           </div>
         </div>
-
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <h3 className="text-xl font-semibold mb-2">Share Your Achievement</h3>
-          <div className="flex space-x-4">
-            <button
-              className="bg-purple-700 hover:bg-purple-900 text-white px-4 py-2 rounded"
-              onClick={handleShareScore}
-            >
-              Share Your Score
-            </button>
-            <button
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-              onClick={() => {
-                navigator.clipboard.writeText(generateCertificateLink());
-                toast.success("Certificate link copied to clipboard!", {
-                  position: "top-right",
-                  autoClose: 2000,
-                });
-              }}
-            >
-              Get Certificate
-            </button>
-          </div>
-        </div>
       </div>
 
-      <div className="flex justify-center space-x-4 mt-6">
+      <div className="flex justify-center space-x-4 mt-8">
         <button
-          className="bg-purple-700 hover:bg-purple-900 text-white px-4 py-2 rounded"
-          onClick={handleRestart}
-        >
-          Restart Quiz
-        </button>
-        <button
-          className="underline text-purple-400"
+          className="bg-purple-700 hover:bg-purple-900 text-white px-6 py-2 rounded font-bold transition"
           onClick={() => navigate("/")}
         >
-          Back to Selection
+          Take Another Quiz
         </button>
       </div>
     </div>

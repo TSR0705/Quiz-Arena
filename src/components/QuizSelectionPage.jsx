@@ -1,384 +1,271 @@
 import React, { useState, useEffect } from "react";
 import { styles } from "../styles";
-import { motion } from "framer-motion";
-import { SectionWrapper } from "../hoc";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronRight, ArrowLeft, Play, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-
-
-
-const quizzes = [
-
-    { 
-        title: "Computer Science", 
-        description: "Challenge your CS fundamentals.", 
-        topics: ["Data Structures", "Algorithms", "Computer Networks", "Operating Systems", "DBMS", "Cybersecurity", "Theory of Computation"] 
-      },
-      { 
-        title: "Web Development", 
-        description: "Dive into the world of frontend and backend.", 
-        topics: ["HTML/CSS", "JavaScript", "React", "Node.js", "MongoDB", "APIs", "Full Stack"] 
-      },
-      { 
-        title: "Software Engineering", 
-        description: "Test your software development knowledge.", 
-        topics: ["SDLC", "Agile", "Version Control", "Testing", "UML Diagrams", "DevOps", "Design Patterns"] 
-      },
-      { 
-        title: "Artificial Intelligence", 
-        description: "Explore smart systems and AI logic.", 
-        topics: ["Machine Learning", "Deep Learning", "Neural Networks", "NLP", "Reinforcement Learning", "AI Ethics", "Computer Vision"] 
-      },
-      { 
-        title: "Cybersecurity", 
-        description: "Understand digital security and protection.", 
-        topics: ["Cryptography", "Network Security", "Ethical Hacking", "Firewalls", "Authentication", "OWASP", "Forensics"] 
-      },
-      { 
-        title: "Operating Systems", 
-        description: "Master the heart of computing systems.", 
-        topics: ["Processes", "Threads", "Memory Management", "File Systems", "Scheduling", "Virtualization", "System Calls"] 
-      },
-      { 
-        title: "Database Systems", 
-        description: "Explore data modeling and SQL queries.", 
-        topics: ["SQL", "NoSQL", "Normalization", "Transactions", "ER Diagrams", "Indexing", "Distributed Databases"] 
-      },
-      { 
-        title: "Electrical Engineering", 
-        description: "Learn about electrical circuits and signals.", 
-        topics: ["Circuits", "Signals and Systems", "Digital Electronics", "Control Systems", "Microprocessors", "Embedded Systems", "VLSI"] 
-      },
-      { 
-        title: "Mechanical Engineering", 
-        description: "Test your mechanics and thermodynamics knowledge.", 
-        topics: ["Kinematics", "Fluid Mechanics", "Thermodynamics", "Machine Design", "Heat Transfer", "Materials Science", "Vibrations"] 
-      },
-      { 
-        title: "Civil Engineering", 
-        description: "Study structures, materials, and infrastructure.", 
-        topics: ["Structural Analysis", "Concrete Technology", "Soil Mechanics", "Transportation Engineering", "Surveying", "Hydraulics", "Construction Planning"] 
-      },
-      {
-        title: "Anatomy",
-        description: "Study the structure of the human body.",
-        topics: ["Skeletal System", "Muscular System", "Nervous System", "Digestive System", "Circulatory System", "Reproductive System", "Histology", "Body Cavities", "Organ Systems"]
-      },
-      {
-        title: "Pharmacology",
-        description: "Understand drug actions and interactions.",
-        topics: ["Drug Classification", "Pharmacokinetics", "Pharmacodynamics", "Side Effects", "Therapeutic Uses", "Antibiotics", "Cardiovascular Drugs", "Neuropharmacology", "Dosage Calculation"]
-      },
-      {
-        title: "Pathology",
-        description: "Explore disease mechanisms and diagnosis.",
-        topics: ["General Pathology", "Systemic Pathology", "Tumors", "Inflammation", "Cell Injury", "Immunopathology", "Infectious Diseases", "Blood Disorders", "Diagnostic Methods"]
-      },
-      {
-        title: "Criminal Law",
-        description: "Learn the principles of criminal justice.",
-        topics: ["Crimes Against Persons", "Crimes Against Property", "Mens Rea and Actus Reus", "Defenses", "Punishments", "Evidence", "Court Procedures", "Criminal Code", "Juvenile Justice"]
-      },
-      {
-        title: "Civil Law",
-        description: "Delve into private legal matters.",
-        topics: ["Contracts", "Torts", "Property Law", "Family Law", "Succession Law", "Consumer Rights", "Liability", "Injunctions", "Remedies"]
-      },
-      {
-        title: "Physics",
-        description: "Explore the laws of nature and physical phenomena.",
-        topics: ["Mechanics", "Electromagnetism", "Thermodynamics", "Waves", "Optics", "Modern Physics", "Quantum Mechanics", "Nuclear Physics", "Relativity"]
-      },
-      {
-        title: "Biology",
-        description: "Understand life and living organisms.",
-        topics: ["Cell Biology", "Genetics", "Evolution", "Human Physiology", "Plant Biology", "Ecology", "Microbiology", "Biotechnology", "Classification of Organisms"]
-      },
-      {
-        title: "Calculus",
-        description: "Master the mathematics of change and motion.",
-        topics: ["Limits", "Derivatives", "Integrals", "Applications of Derivatives", "Applications of Integrals", "Differential Equations", "Series", "Multivariable Calculus", "Optimization"]
-      },
-      {
-        title: "Statistics",
-        description: "Analyze and interpret data meaningfully.",
-        topics: ["Data Collection", "Probability", "Distributions", "Descriptive Statistics", "Inferential Statistics", "Hypothesis Testing", "Regression", "Correlation", "Sampling"]
-      },
-      {
-        title: "English Grammar",
-        description: "Perfect your understanding of English structure.",
-        topics: ["Parts of Speech", "Tenses", "Subject-Verb Agreement", "Clauses", "Sentence Structure", "Articles", "Modifiers", "Prepositions", "Punctuation"]
-      },
-      {
-        title: "Vocabulary",
-        description: "Enhance your word power and comprehension.",
-        topics: ["Synonyms", "Antonyms", "One-word Substitutions", "Idioms & Phrases", "Common Confusables", "Word Formation", "Contextual Usage", "Phrasal Verbs", "Root Words"]
-      },
-      {
-        title: "Logical Reasoning",
-        description: "Test and train your logical thinking skills.",
-        topics: ["Number Series", "Letter Series", "Analogies", "Coding-Decoding", "Seating Arrangements", "Blood Relations", "Direction Sense", "Cause and Effect", "Odd One Out"]
-      },
-      {
-        title: "Analytical Reasoning",
-        description: "Solve complex puzzles and arguments.",
-        topics: ["Syllogisms", "Data Sufficiency", "Assumptions", "Conclusions", "Statements and Arguments", "Decision Making", "Input-Output", "Puzzle Solving", "Pattern Recognition"]
-      }
-];
-
-const itemsPerPage = 6;
-
 const QuizSelectionPage = () => {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTopic, setSelectedTopic] = useState("");
-const [difficulty, setDifficulty] = useState("easy");
-const [numQuestions, setNumQuestions] = useState(5);
-
-  const totalPages = Math.ceil(quizzes.length / itemsPerPage);
-
-
+  const [selectedTopicId, setSelectedTopicId] = useState("");
+  const [difficulty, setDifficulty] = useState("easy");
+  const [numQuestions, setNumQuestions] = useState(5);
+  const [quizMode, setQuizMode] = useState("assessment"); 
   const navigate = useNavigate();
 
-  // Auto-slide every 7 seconds
+  // 1. Fetch categories and topics from server
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentPage((prev) => (prev < totalPages ? prev + 1 : 1));
-    }, 7000); //1000 milliseconds = 1 second
+    fetch("/api/categories")
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Server responded with status ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCategories(data);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load catalog:", err);
+        setError('Failed to load quiz catalog. Please try again.');
+        setLoading(false);
+      });
+  }, []);
 
-    return () => clearInterval(interval);
-  }, [totalPages]);
-
-  const handleCategoryClick = (category) => {
+  // Handle category selected
+  const handleCategorySelect = (category) => {
     setSelectedCategory(category);
-    setShowModal(true);
+    setSelectedTopicId(""); // Reset topic selection
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
+  const handleBackToCategories = () => {
     setSelectedCategory(null);
+    setSelectedTopicId("");
   };
 
+  // 3. Start attempt API call (FR-030)
+  const handleStartQuiz = async () => {
+    if (!selectedCategory || !selectedTopicId) return;
 
-  const handleStartQuiz = () => {
-    navigate("/quizpage", {
-      state: {
-        category: selectedCategory.title,
-        topic: selectedTopic,
-        numQuestions,
-        difficulty,
-      },
-    });
+    try {
+      const res = await fetch("/api/attempts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          categoryId: selectedCategory.id,
+          topicId: parseInt(selectedTopicId),
+          difficulty,
+          questionCount: numQuestions,
+          quizMode
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        navigate(`/quiz/${data.attemptId}`);
+      } else {
+        alert(data.error?.message || "Failed to start quiz attempt.");
+      }
+    } catch (err) {
+      console.error("Start quiz error:", err);
+      alert("Failed to start quiz due to a network error.");
+    }
   };
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to page 1 after filtering
-  };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#915EFF] mx-auto mb-4"></div>
+      </div>
+    );
+  }
 
-  
-
-  const filteredQuizzes = quizzes.filter(
-    (quiz) =>
-      quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      quiz.topics.some((topic) =>
-        topic.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-  );
-
-  const currentItems = filteredQuizzes.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  if (error) {
+    return (
+      <div className={`${styles.card} p-8 text-center text-red-400 space-y-4`}>
+        <p className="text-lg">{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className={styles.btnPrimary}
+        >
+          Retry Loading
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <section className={`w-full min-h-screen ${styles.padding}`}>
-      <div className="max-w-7xl mx-auto">
-        <h2 className={`${styles.sectionHeadText} text-center`}>
-          Choose Your <span className="text-[#915EFF]">Quiz</span>
-        </h2>
-        <p className={`${styles.sectionSubText} text-center mt-4 mb-10`}>
-          Select a category and start playing
-        </p>
+    <div className="space-y-6">
+      {/* Category List view */}
+      {!selectedCategory ? (
+        <div className="space-y-6">
+          <div className="space-y-1.5">
+            <h2 className={styles.h2}>Select Quiz Category</h2>
+            <p className={styles.subtext}>Choose a domain to view topics and start testing</p>
+          </div>
 
-        {/* Search Box */}
-        <div className="mb-6 flex justify-center">
-          <input
-            type="text"
-            placeholder="Search quizzes or topics..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="p-3 rounded-xl w-1/3 text-white bg-[#2e2e4d] border border-[#3e3e5f] focus:outline-none focus:ring-2 focus:ring-[#915EFF]"
-          />
+          {categories.length === 0 ? (
+            <div className="text-center text-gray-500 py-12">
+              No quiz categories are currently available. Check back soon!
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {categories.map((cat) => (
+                <div
+                  key={cat.id}
+                  onClick={() => handleCategorySelect(cat)}
+                  className={`${styles.card} hover:border-[#915EFF]/40 hover:shadow-violet-500/5 hover:-translate-y-1 cursor-pointer flex flex-col justify-between`}
+                >
+                  <div>
+                    <h3 className="text-white text-xl font-bold mb-2 group-hover:text-[#915EFF] transition duration-150">
+                      {cat.name}
+                    </h3>
+                    <p className="text-gray-400 text-xs leading-normal">{cat.description}</p>
+                  </div>
+                  <div className="mt-6 flex justify-between items-center text-xs text-gray-500">
+                    <span>{cat.topics?.length || 0} topics available</span>
+                    <ChevronRight className="w-4 h-4 text-[#915EFF]" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+      ) : (
+        // Configuration View (Category selected)
+        <div className="space-y-6">
+          {/* Back button */}
+          <button
+            onClick={handleBackToCategories}
+            className="flex items-center gap-2 text-xs font-semibold text-[#915EFF] hover:underline bg-transparent border-none cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Categories</span>
+          </button>
 
-        {filteredQuizzes.length === 0 ? (
-          <p className="text-center text-white">No results found</p>
-        ) : (
-          <>
-            {/* Quiz Selection Grid */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {currentItems.map((quiz, index) => (
-                <motion.div
-                  key={index}
-                  whileHover={{
-                    scale: 1.05,
-                    boxShadow: "0 0 20px rgba(145, 94, 255, 0.5)",
-                  }}
-                  className="bg-[#1a1a2e] rounded-2xl p-6 shadow-lg hover:shadow-violet-500/40 transition-all duration-300 border border-[#2a2a40] cursor-pointer"
-                  onClick={() => handleCategoryClick(quiz)}
-                >
-                  <h3 className="text-white text-2xl font-bold mb-2">
-                    {quiz.title}
-                  </h3>
-                  <p className="text-[#dfd9ff] text-sm">{quiz.description}</p>
-                  <button className="mt-4 px-4 py-2 bg-[#915EFF] text-white rounded-md hover:bg-[#a27eff] transition duration-200">
-                    Select Topic 
-                  </button>
-                </motion.div>
-              ))}
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left side: Selections & Config */}
+            <div className={`${styles.card} lg:col-span-2 space-y-6`}>
+              <div className="border-b border-[#2a2a40] pb-3">
+                <h3 className={styles.h3}>Configure Quiz Parameters</h3>
+                <p className={styles.subtext}>Category: <strong className="text-white">{selectedCategory.name}</strong></p>
+              </div>
 
-            {/* Pagination */}
-            <div className="flex justify-center mt-12 gap-2">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                className={`px-4 py-2 rounded-full border text-white flex items-center gap-2 ${
-                  currentPage === 1
-                    ? "border-gray-600 text-gray-500 cursor-not-allowed"
-                    : "border-[#915EFF] hover:bg-[#915EFF] hover:text-white"
-                }`}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft /> Prev
-              </button>
+              <div className="space-y-5">
+                {/* Topic select */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-gray-400">Choose Topic</label>
+                  <select
+                    value={selectedTopicId}
+                    onChange={(e) => setSelectedTopicId(e.target.value)}
+                    className={styles.input}
+                  >
+                    <option value="">Select a topic</option>
+                    {selectedCategory.topics.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {[...Array(totalPages)].map((_, idx) => (
+                {/* Mode select */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-gray-400">Quiz Mode</label>
+                  <select
+                    value={quizMode}
+                    onChange={(e) => setQuizMode(e.target.value)}
+                    className={styles.input}
+                  >
+                    <option value="assessment">Assessment Mode (Timer limit, free navigation, graded at end)</option>
+                    <option value="practice">Practice Mode (Immediate answer explanation, sequential nav)</option>
+                  </select>
+                </div>
+
+                {/* Difficulty select */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-gray-400">Select Difficulty</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {["easy", "medium", "hard"].map((level) => (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => setDifficulty(level)}
+                        className={`py-2.5 rounded-xl text-xs font-bold capitalize transition duration-150 border cursor-pointer ${
+                          difficulty === level
+                            ? "bg-[#915EFF]/15 border-[#915EFF] text-white"
+                            : "bg-[#2e2e4d]/40 border-[#3e3e5f] text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Question count */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-gray-400">Number of Questions (1-50)</label>
+                  <select
+                    value={numQuestions}
+                    onChange={(e) => setNumQuestions(parseInt(e.target.value) || 5)}
+                    className={styles.input}
+                  >
+                    <option value={5}>5 Questions</option>
+                    <option value={10}>10 Questions</option>
+                    <option value={15}>15 Questions</option>
+                    <option value={20}>20 Questions</option>
+                    <option value={25}>25 Questions</option>
+                  </select>
+                </div>
+
+                {/* Start Button */}
                 <button
-                  key={idx}
-                  onClick={() => setCurrentPage(idx + 1)}
-                  className={`w-10 h-10 rounded-full text-sm font-semibold ${
-                    currentPage === idx + 1
-                      ? "bg-[#915EFF] text-white"
-                      : "bg-transparent text-white border border-[#2e2e4d] hover:bg-[#2e2e4d]"
-                  }`}
+                  onClick={() => {
+                    if (!selectedTopicId) {
+                      alert("Please select a topic first.");
+                      return;
+                    }
+                    handleStartQuiz();
+                  }}
+                  disabled={!selectedTopicId}
+                  className={`${styles.btnPrimary} w-full py-3.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  {idx + 1}
+                  <Play className="w-4 h-4 fill-white" />
+                  <span>Start Challenge</span>
                 </button>
-              ))}
-
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                className={`px-4 py-2 rounded-full border text-white flex items-center gap-2 ${
-                  currentPage === totalPages
-                    ? "border-gray-600 text-gray-500 cursor-not-allowed"
-                    : "border-[#915EFF] hover:bg-[#915EFF] hover:text-white"
-                }`}
-                disabled={currentPage === totalPages}
-              >
-                Next <ChevronRight />
-              </button>
+              </div>
             </div>
-          </>
-        )}
-      </div>
 
-      {/* Modal */}
-      {showModal && selectedCategory && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-    <div className="bg-[#1a1a2e] p-8 rounded-xl w-[90%] max-w-md text-white relative">
-      <button
-        onClick={handleCloseModal}
-        className="absolute top-2 right-2 text-gray-400 hover:text-white"
-      >
-        ✕
-      </button>
-
-      <h2 className="text-2xl font-bold mb-4">{selectedCategory.title}</h2>
-
-      {/* Topic Dropdown */}
-      <label className="block mb-2">Choose Topic:</label>
-      <select
-        value={selectedTopic}
-        onChange={(e) => setSelectedTopic(e.target.value)}
-        className="w-full p-2 mb-4 bg-[#2e2e4d] rounded-md text-white"
-      >
-        <option value="">Select a topic</option>
-        {selectedCategory.topics.map((topic, index) => (
-          <option key={index} value={topic}>
-            {topic}
-          </option>
-        ))}
-      </select>
-
-      {/* Difficulty Dropdown */}
-      <label className="block mb-2">Select Difficulty:</label>
-      <select
-        value={difficulty}
-        onChange={(e) => setDifficulty(e.target.value)}
-        className="w-full p-2 mb-4 bg-[#2e2e4d] rounded-md text-white"
-      >
-        <option value="easy">Easy</option>
-        <option value="medium">Medium</option>
-        <option value="hard">Hard</option>
-      </select>
-
-      {/* Number of Questions Input */}
-      <label className="block mb-2">Number of Questions:</label>
-      <input
-        type="number"
-        value={numQuestions}
-        onChange={(e) => setNumQuestions(parseInt(e.target.value))}
-        className="w-full p-2 mb-6 bg-[#2e2e4d] rounded-md text-white"
-        min={1}
-        max={50}
-      />
-
-      {/* Start Quiz Button */}
-      <button
-        onClick={() => {
-          if (numQuestions > 50) {
-            alert("Please select 50 or fewer questions.");
-            return;
-          }
-          if (numQuestions < 1) {
-            alert("Please select at least 1 question.");
-            return;
-          }
-          if (!selectedTopic) {
-            alert("Please select a topic.");
-            return;
-          }
-        
-          navigate("/quizpage", {
-            state: {
-              category: selectedCategory.title,
-              topic: selectedTopic,
-              difficulty,
-              numQuestions,
-            },
-          });
-        }}
-        
-        disabled={!selectedTopic}
-        className={`w-full py-2 rounded-md ${
-          selectedTopic
-            ? "bg-[#915EFF] hover:bg-[#a27eff]"
-            : "bg-gray-600 cursor-not-allowed"
-        } transition duration-200`}
-      >
-        Start Quiz
-      </button>
+            {/* Right side: Helper hints */}
+            <div className="space-y-6">
+              <div className={`${styles.card} border-yellow-500/10`}>
+                <h4 className="font-semibold text-yellow-500 text-sm flex items-center gap-1.5 mb-2">
+                  <Info className="w-4 h-4" />
+                  <span>Mode Guidance</span>
+                </h4>
+                <div className="space-y-3.5 text-xs text-gray-400 leading-normal">
+                  <div>
+                    <p className="font-bold text-white mb-0.5">Practice Mode</p>
+                    <p>Designed for learning. You get immediate correctness feedback and explanations for each option after selecting your answer.</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-white mb-0.5">Assessment Mode</p>
+                    <p>Designed for testing. A global countdown timer enforces speed. You submit your entire paper at the end for grading and streak/XP credits.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-)}
-    </section>
   );
-}
+};
 
-export default SectionWrapper(QuizSelectionPage, "Quizzes");
+export default QuizSelectionPage;
