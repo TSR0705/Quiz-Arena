@@ -13,9 +13,12 @@ import {
   Sparkles, 
   ShieldCheck, 
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  AlertTriangle
 } from "lucide-react";
 import { styles } from "../styles";
+import { motion } from "framer-motion";
+import { fadeIn, zoomIn, staggerContainer } from "../utils/motion";
 
 const QuizCompletionPage = () => {
   const { attemptId } = useParams();
@@ -122,56 +125,65 @@ const QuizCompletionPage = () => {
   const strokeDashoffset = circumference - (results.percentage / 100) * circumference;
 
   return (
-    <div className={`p-6 md:p-8 text-white max-w-5xl mx-auto min-h-screen space-y-8 ${styles.bgMain}`}>
+    <div className={`p-4 md:p-8 text-white max-w-4xl mx-auto min-h-screen space-y-8 select-none`}>
       <ToastContainer />
 
-      {/* Hero Performance Card */}
-      <div className={`${styles.card} bg-gradient-to-r from-[#1a1a2e] to-[#201538] flex flex-col md:flex-row items-center justify-between gap-8 border-[#915EFF]/20`}>
+      {/* Hero Performance Card - Restrained dark theme */}
+      <motion.div 
+        variants={zoomIn(0, 0.2)}
+        initial="hidden"
+        animate="show"
+        className="bg-[#1a1a2e]/55 border border-[#2a2a40]/65 p-8 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-8"
+      >
         <div className="space-y-4 max-w-md text-center md:text-left">
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#915EFF]/20 text-[#a27eff] border border-[#915EFF]/30">
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#915EFF]/15 text-[#a27eff] border border-[#915EFF]/25">
             Performance Summary
           </span>
-          <h2 className="text-3xl font-black text-white">
+          <h2 className="text-2xl font-black text-white">
             Quiz Completed! 🎉
           </h2>
-          <p className="text-sm text-gray-400 leading-relaxed">
+          <p className="text-xs text-gray-400 leading-relaxed">
             Excellent effort! Your authoritative grade details have been securely logged. Let's analyze your results and claim any earned rewards below.
           </p>
-          <div className="flex flex-wrap justify-center md:justify-start gap-3.5 pt-2">
-            <button
+          <div className="flex flex-wrap justify-center md:justify-start gap-3 pt-1.5">
+            <motion.button
+              whileHover={{ y: -0.5, boxShadow: "0 4px 12px rgba(145, 94, 255, 0.2)" }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => navigate("/dashboard/quizzes")}
               className={styles.btnPrimary}
             >
               Play Again
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ y: -0.5 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => navigate("/dashboard")}
               className={styles.btnSecondary}
             >
               Back to Dashboard
-            </button>
+            </motion.button>
           </div>
         </div>
 
         {/* Circular SVG Grade Progress */}
         <div className="relative flex items-center justify-center shrink-0">
-          <svg className="w-40 h-40 transform -rotate-90">
+          <svg className="w-36 h-36 transform -rotate-90">
             {/* Background Circle */}
             <circle
-              cx="80"
-              cy="80"
+              cx="72"
+              cy="72"
               r={radius}
-              className="text-[#202038] stroke-current"
-              strokeWidth="10"
+              className="text-[#202038]/50 stroke-current"
+              strokeWidth="8"
               fill="transparent"
             />
             {/* Foreground Progress Circle */}
             <circle
-              cx="80"
-              cy="80"
+              cx="72"
+              cy="72"
               r={radius}
               className="text-[#915EFF] stroke-current transition-all duration-1000"
-              strokeWidth="10"
+              strokeWidth="8"
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
@@ -180,48 +192,53 @@ const QuizCompletionPage = () => {
           </svg>
           {/* Central Label */}
           <div className="absolute text-center">
-            <span className="text-3xl font-black text-white">{results.percentage}%</span>
-            <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">Accuracy</span>
+            <span className="text-2xl font-black text-white">{results.percentage}%</span>
+            <span className="block text-[9px] text-gray-500 font-bold uppercase tracking-wider">Accuracy</span>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Metrics Card Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <motion.div 
+        variants={staggerContainer(0.04, 0.05)}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+      >
         {/* Score Card */}
-        <div className={styles.card}>
+        <motion.div variants={fadeIn("up", "tween", 0, 0.18)} className={styles.card}>
           <p className={styles.subtext}>Final Score</p>
-          <p className="text-3xl font-black text-white mt-1">{results.totalScore} / {results.maxScore}</p>
-          <p className="text-xs text-green-400 mt-2 font-bold flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5" />
+          <p className="text-2xl font-black text-white mt-1">{results.totalScore} / {results.maxScore}</p>
+          <p className="text-[10px] text-green-400 mt-2 font-bold flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3" />
             <span>{correctAnswers.length} correct answers</span>
           </p>
-        </div>
+        </motion.div>
 
         {/* XP earned card */}
-        <div className={styles.card}>
+        <motion.div variants={fadeIn("up", "tween", 0.04, 0.18)} className={styles.card}>
           <p className={styles.subtext}>XP Earned</p>
-          <p className="text-3xl font-black text-yellow-400 mt-1">+{results.xpEarned} XP</p>
-          <p className="text-xs text-gray-500 mt-2">Added to Level progress</p>
-        </div>
+          <p className="text-2xl font-black text-yellow-500 mt-1">+{results.xpEarned} XP</p>
+          <p className="text-[10px] text-gray-500 mt-2">Added to Level progress</p>
+        </motion.div>
 
         {/* Time Taken */}
-        <div className={styles.card}>
+        <motion.div variants={fadeIn("up", "tween", 0.08, 0.18)} className={styles.card}>
           <p className={styles.subtext}>Time Taken</p>
-          <p className="text-3xl font-black text-white mt-1">{results.timeTakenSeconds}s</p>
-          <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5" />
+          <p className="text-2xl font-black text-white mt-1">{results.timeTakenSeconds}s</p>
+          <p className="text-[10px] text-gray-500 mt-2 flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-[#915EFF]" />
             <span>Speed index verified</span>
           </p>
-        </div>
+        </motion.div>
 
         {/* Mode & Category info */}
-        <div className={styles.card}>
+        <motion.div variants={fadeIn("up", "tween", 0.12, 0.18)} className={styles.card}>
           <p className={styles.subtext}>Quiz Mode</p>
-          <p className="text-2xl font-black text-white mt-1.5 capitalize">{results.quizMode || "Assessment"}</p>
-          <p className="text-xs text-gray-500 mt-2 uppercase tracking-wide">Difficulty: {results.difficulty}</p>
-        </div>
-      </div>
+          <p className="text-xl font-black text-white mt-1.5 capitalize">{results.quizMode || "Assessment"}</p>
+          <p className="text-[10px] text-gray-500 mt-2 uppercase tracking-wide">Difficulty: {results.difficulty}</p>
+        </motion.div>
+      </motion.div>
 
       {/* Share / Certificate Widget */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -229,26 +246,33 @@ const QuizCompletionPage = () => {
         {/* Share & Certificate (1/3) */}
         <div className="flex flex-col gap-6">
           {/* Certificate eligibility */}
-          <div className={`${styles.card} border-[#915EFF]/25 bg-gradient-to-b from-[#1a1a2e] to-[#201830] flex flex-col justify-between`}>
+          <motion.div 
+            variants={fadeIn("up", "tween", 0.12, 0.2)}
+            initial="hidden"
+            animate="show"
+            className={`${styles.card} border-[#2a2a40]`}
+          >
             <div>
-              <h3 className="text-md font-bold text-white mb-2 flex items-center gap-1.5">
-                <Award className="w-5 h-5 text-yellow-500" />
+              <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-1.5">
+                <Award className="w-4.5 h-4.5 text-yellow-500" />
                 <span>Earned Certificates</span>
               </h3>
-              <p className="text-xs text-gray-400 leading-normal">
+              <p className="text-[11px] text-gray-400 leading-normal">
                 Registered users scoring 100% on assessments containing 5 or more questions earn verified credentials.
               </p>
             </div>
 
             {results.percentage === 100 && results.maxScore >= 5 ? (
-              <div className="mt-6 space-y-4">
+              <div className="mt-5 space-y-4">
                 {!certCode ? (
-                  <button
+                  <motion.button
+                    whileHover={{ y: -0.5, boxShadow: "0 4px 12px rgba(145, 94, 255, 0.2)" }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={handleGetCertificate}
                     className={`${styles.btnPrimary} w-full text-xs py-2`}
                   >
                     Generate Verified Certificate
-                  </button>
+                  </motion.button>
                 ) : (
                   <div className="p-4 bg-[#131326] rounded-xl border border-green-500/25 space-y-3">
                     <span className="text-[10px] font-bold text-green-400 uppercase flex items-center gap-1.5">
@@ -272,35 +296,47 @@ const QuizCompletionPage = () => {
                 )}
               </div>
             ) : (
-              <div className="mt-6 p-4 bg-[#131326]/50 rounded-xl border border-[#2a2a40] text-center text-xs text-gray-400">
+              <div className="mt-5 p-3.5 bg-[#131326]/55 rounded-xl border border-[#2a2a40]/60 text-center text-[10px] text-gray-500 font-medium">
                 Not eligible for certificate. Score 100% on 5+ questions to unlock!
               </div>
             )}
-          </div>
+          </motion.div>
 
           {/* Social Share card */}
-          <div className={styles.card}>
-            <h3 className="text-md font-bold text-white mb-2 flex items-center gap-1.5">
-              <Share2 className="w-4.5 h-4.5 text-[#915EFF]" />
+          <motion.div 
+            variants={fadeIn("up", "tween", 0.14, 0.2)}
+            initial="hidden"
+            animate="show"
+            className={styles.card}
+          >
+            <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-1.5">
+              <Share2 className="w-4 h-4.5 text-[#915EFF]" />
               <span>Share Score</span>
             </h3>
-            <p className="text-xs text-gray-400 leading-normal mb-4">
+            <p className="text-[11px] text-gray-400 leading-normal mb-4">
               Brag about your accuracy and challenge your community!
             </p>
-            <button
+            <motion.button
+              whileHover={{ y: -0.5 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleShareScore}
               className={`${styles.btnSecondary} w-full text-xs py-2`}
             >
               Share on Twitter / X
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         </div>
 
         {/* Real-time topic leaderboard (2/3) */}
-        <div className={`${styles.card} lg:col-span-2 space-y-4`}>
-          <div className="flex justify-between items-center border-b border-[#2a2a40] pb-3 mb-4">
+        <motion.div 
+          variants={fadeIn("up", "tween", 0.16, 0.2)}
+          initial="hidden"
+          animate="show"
+          className={`${styles.card} lg:col-span-2 space-y-4`}
+        >
+          <div className="flex justify-between items-center border-b border-[#2a2a40]/60 pb-3 mb-4">
             <h3 className={styles.h3}>Topic Leaderboard ({results.difficulty})</h3>
-            <span className="text-xs font-semibold text-gray-500 uppercase">Top Submissions</span>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Top Submissions</span>
           </div>
 
           {leaderboard.length === 0 ? (
@@ -308,13 +344,13 @@ const QuizCompletionPage = () => {
               No leaderboard entries found for this topic yet.
             </p>
           ) : (
-            <div className="divide-y divide-[#2a2a40]/30 max-h-[280px] overflow-y-auto pr-2">
+            <div className="divide-y divide-[#2a2a40]/30 max-h-[280px] overflow-y-auto pr-2 no-scrollbar">
               {leaderboard.map((entry) => {
                 const isCurrentUser = entry.attemptId === attemptId;
                 return (
                   <div
                     key={entry.attemptId}
-                    className={`flex justify-between items-center py-3 px-3 text-xs transition duration-150 rounded-xl ${
+                    className={`flex justify-between items-center py-2.5 px-3 text-xs transition duration-150 rounded-xl ${
                       isCurrentUser 
                         ? "bg-[#915EFF]/10 border border-[#915EFF]/25 text-white font-bold" 
                         : "text-gray-300 hover:bg-[#202038]/30"
@@ -325,7 +361,7 @@ const QuizCompletionPage = () => {
                       <img 
                         src={`https://api.dicebear.com/7.x/bottts/svg?seed=${entry.displayName}`}
                         alt="avatar"
-                        className="w-6 h-6 rounded bg-[#202038] border border-[#2a2a40]"
+                        className="w-5 h-5 rounded bg-[#202038] border border-[#2a2a40]"
                       />
                       <span>
                         {entry.displayName} {isCurrentUser && "(You)"}
@@ -339,12 +375,17 @@ const QuizCompletionPage = () => {
               })}
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
 
       {/* Question Explanations review */}
-      <div className={styles.card}>
-        <div className="border-b border-[#2a2a40] pb-3 mb-6">
+      <motion.div 
+        variants={fadeIn("up", "tween", 0.18, 0.2)}
+        initial="hidden"
+        animate="show"
+        className={styles.card}
+      >
+        <div className="border-b border-[#2a2a40]/60 pb-3 mb-6">
           <h3 className={styles.h3}>Review Question Explanations</h3>
         </div>
 
@@ -359,10 +400,10 @@ const QuizCompletionPage = () => {
             return (
               <div 
                 key={idx} 
-                className={`p-5 rounded-xl border space-y-3.5 transition duration-150 ${
+                className={`p-5 rounded-xl border bg-[#202038]/10 space-y-3.5 transition duration-150 ${
                   isCorrect 
-                    ? "bg-green-500/5 border-green-500/20" 
-                    : "bg-red-500/5 border-red-500/20"
+                    ? "border-l-4 border-l-green-500/80 border-[#2a2a40]/60" 
+                    : "border-l-4 border-l-red-500/80 border-[#2a2a40]/60"
                 }`}
               >
                 <div className="flex justify-between items-start gap-4">
@@ -371,8 +412,8 @@ const QuizCompletionPage = () => {
                   </h4>
                   <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
                     isCorrect 
-                      ? "bg-green-500/10 text-green-400" 
-                      : "bg-red-500/10 text-red-400"
+                      ? "bg-green-500/10 text-green-400 border border-green-500/25" 
+                      : "bg-red-500/10 text-red-400 border border-red-500/25"
                   }`}>
                     {isCorrect ? "Correct" : "Incorrect"}
                   </span>
@@ -403,7 +444,7 @@ const QuizCompletionPage = () => {
             );
           })}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

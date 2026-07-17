@@ -411,22 +411,22 @@ const QuizTakingPage = () => {
 
   // 7. Quiz taking main page
   return (
-    <div className={`p-6 md:p-8 text-white max-w-3xl mx-auto min-h-screen flex flex-col justify-center space-y-6 ${styles.bgMain}`}>
+    <div className={`p-4 md:p-8 text-white max-w-2xl mx-auto min-h-[80vh] flex flex-col justify-start space-y-6 select-none`}>
       <ToastContainer />
       
-      <div className={styles.card}>
+      <div>
         {/* Header Title info */}
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-[#2a2a40] pb-4 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-[#2a2a40]/60 pb-5 mb-5">
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-white capitalize">
+            <h2 className="text-lg font-black tracking-tight text-white capitalize">
               {attempt.quizMode === "practice" ? "⚡ Practice Session" : "🏆 Assessment Run"}
             </h2>
-            <p className={styles.subtext}>Answer carefully and watch the timer</p>
+            <p className="text-xs text-gray-500 mt-0.5">Answer carefully and watch the timer</p>
           </div>
           {/* Global / Local Timer */}
-          <div className="flex items-center gap-2 px-3.5 py-1.5 bg-[#202038] border border-[#2a2a4c] rounded-xl self-start sm:self-auto">
-            <Timer className={`w-4 h-4 ${timeLeft <= 10 ? "text-red-500 animate-pulse" : "text-[#915EFF]"}`} />
-            <span className={`text-sm font-mono font-bold ${timeLeft <= 10 ? "text-red-400" : "text-white"}`}>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-[#202038]/40 border border-[#2a2a4c]/50 rounded-xl self-start sm:self-auto">
+            <Timer className={`w-3.5 h-3.5 ${timeLeft <= 10 ? "text-red-500 animate-pulse" : "text-[#915EFF]"}`} />
+            <span className={`text-xs font-mono font-bold ${timeLeft <= 10 ? "text-red-400" : "text-gray-300"}`}>
               {attempt.quizMode === "practice" 
                 ? `${timeLeft}s` 
                 : `${Math.floor(timeLeft / 60)}m ${timeLeft % 60}s`}
@@ -435,9 +435,9 @@ const QuizTakingPage = () => {
         </div>
 
         {/* Navigator Circles */}
-        <div className="space-y-2 mb-6">
-          <label className="text-xs font-semibold text-gray-400">Navigation Map</label>
-          <div className="flex flex-wrap gap-2 p-3 bg-[#202038]/40 border border-[#2a2a40] rounded-xl">
+        <div className="space-y-1.5 mb-6">
+          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Navigation Map</label>
+          <div className="flex flex-wrap gap-1.5 py-1">
             {[...Array(attempt.questionsCount)].map((_, index) => {
               const isCurrent = index === attempt.currentQuestionIndex;
               const isFlagged = flaggedQuestions.includes(index);
@@ -448,12 +448,12 @@ const QuizTakingPage = () => {
                 <button
                   key={index}
                   onClick={() => (attempt.quizMode === "assessment" || index <= attempt.currentQuestionIndex) && handleJumpToQuestion(index)}
-                  className={`w-9 h-9 rounded-xl font-bold text-xs flex items-center justify-center transition-all duration-200 border cursor-pointer ${
+                  className={`w-8 h-8 rounded-lg font-bold text-xs flex items-center justify-center transition-all duration-150 border cursor-pointer ${
                     isCurrent
-                      ? "bg-[#915EFF] border-[#915EFF] text-white shadow-md shadow-[#915EFF]/25 scale-110 z-10"
+                      ? "bg-[#915EFF] border-[#915EFF] text-white shadow-md shadow-[#915EFF]/15 scale-105 z-10"
                       : isPracticeCompleted || isAssessmentCompleted
                       ? "bg-green-500/10 border-green-500/20 text-green-400"
-                      : "bg-[#2e2e4d]/30 border-[#3e3e5f] text-gray-400 hover:text-white"
+                      : "bg-[#202038]/40 border-[#2a2a40] text-gray-400 hover:text-white"
                   } ${isFlagged ? "border-yellow-500" : ""}`}
                   disabled={attempt.quizMode === "practice" && index > attempt.currentQuestionIndex}
                   title={`Question ${index + 1}`}
@@ -467,7 +467,7 @@ const QuizTakingPage = () => {
 
         {/* Visual Progress Bar Timer for Practice Mode */}
         {attempt.quizMode === "practice" && !isSubmitted && (
-          <div className="w-full bg-[#2a2a40]/50 h-1 rounded-full overflow-hidden mb-6">
+          <div className="w-full bg-[#202038] h-1 rounded-full overflow-hidden mb-6 border border-[#2a2a40]/30">
             <div 
               className={`h-full transition-all duration-1000 ease-linear ${timeLeft <= 10 ? 'bg-red-500' : 'bg-[#915EFF]'}`} 
               style={{ width: `${(timeLeft / 30) * 100}%` }}
@@ -491,7 +491,7 @@ const QuizTakingPage = () => {
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-6"
         >
-          <div className="p-5 bg-[#202038]/50 border border-[#2a2a40] rounded-xl text-white font-medium text-base leading-relaxed">
+          <div className="text-xl font-bold text-white tracking-tight leading-relaxed py-3">
             {currentQuestion.questionText}
           </div>
 
@@ -501,7 +501,7 @@ const QuizTakingPage = () => {
               const isEliminated = eliminatedOptions.includes(option.id);
               
               // Correctness state mappings for Practice Mode Feedback
-              let cardStyle = "bg-[#202038]/30 border-[#2a2a40] text-gray-200 hover:border-[#915EFF]/50 hover:bg-[#202038]/50";
+              let cardStyle = "bg-[#202038]/15 border-[#2a2a40]/70 text-gray-400 hover:border-[#915EFF]/40 hover:bg-[#202038]/30 hover:text-white";
               
               if (isEliminated) {
                 cardStyle = "bg-gray-900/40 border-gray-800/40 text-gray-600 cursor-not-allowed line-through";
@@ -510,17 +510,17 @@ const QuizTakingPage = () => {
                   // User selected this option
                   const isCorrect = currentQuestion.correctOptionIds?.includes(option.id) || feedback === "Correct!";
                   cardStyle = isCorrect 
-                    ? "bg-green-500/10 border-green-500 text-green-400 font-bold" 
-                    : "bg-red-500/10 border-red-500 text-red-400 font-bold";
+                    ? "bg-green-500/5 border-green-500 text-green-400 font-bold" 
+                    : "bg-red-500/5 border-red-500 text-red-400 font-bold";
                 } else if (currentQuestion.correctOptionIds?.includes(option.id)) {
                   // Correct option that user did NOT select
                   cardStyle = "bg-green-500/5 border-green-500/40 text-green-400";
                 } else {
-                  cardStyle = "bg-[#202038]/10 border-[#2a2a40]/30 text-gray-500";
+                  cardStyle = "bg-[#202038]/5 border-[#2a2a40]/30 text-gray-500";
                 }
               } else if (selectedOptionId === option.id) {
                 // Draft selection
-                cardStyle = "bg-[#915EFF]/10 border-[#915EFF] text-white shadow-md shadow-[#915EFF]/5 font-semibold";
+                cardStyle = "bg-[#915EFF]/5 border-[#915EFF] text-white shadow-md shadow-[#915EFF]/5 font-semibold";
               }
 
               return (
