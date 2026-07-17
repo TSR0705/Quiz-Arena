@@ -13,6 +13,7 @@ import {
   Compass
 } from "lucide-react";
 import { styles } from "../styles";
+import { motion } from "framer-motion";
 
 const DashboardLayout = () => {
   const { currentUser, logout } = useAuth();
@@ -69,14 +70,21 @@ const DashboardLayout = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-3.5 px-4 py-3 rounded-xl font-medium text-sm transition duration-150 ${
+                  className={`flex items-center gap-3.5 px-4 py-3 rounded-xl font-medium text-sm relative transition duration-150 ${
                     isActive 
-                      ? "bg-[#915EFF] text-white shadow-lg shadow-[#915EFF]/20" 
-                      : "text-gray-400 hover:text-white hover:bg-[#202038]"
+                      ? "text-white" 
+                      : "text-gray-400 hover:text-white hover:bg-[#202038]/40"
                   }`}
                 >
-                  <Icon className="w-4.5 h-4.5" />
-                  <span>{item.name}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeSidebarPill"
+                      className="absolute inset-0 bg-[#915EFF] rounded-xl z-0 shadow-md shadow-[#915EFF]/15"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <Icon className="w-4.5 h-4.5 z-10" />
+                  <span className="z-10">{item.name}</span>
                 </Link>
               );
             })}
@@ -126,14 +134,21 @@ const DashboardLayout = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3.5 px-4 py-3 rounded-xl font-medium text-sm transition duration-150 ${
+                  className={`flex items-center gap-3.5 px-4 py-3 rounded-xl font-medium text-sm relative transition duration-150 ${
                     isActive 
-                      ? "bg-[#915EFF] text-white shadow-lg shadow-[#915EFF]/20" 
-                      : "text-gray-400 hover:text-white hover:bg-[#202038]"
+                      ? "text-white" 
+                      : "text-gray-400 hover:text-white hover:bg-[#202038]/40"
                   }`}
                 >
-                  <Icon className="w-4.5 h-4.5" />
-                  <span>{item.name}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeSidebarPillMobile"
+                      className="absolute inset-0 bg-[#915EFF] rounded-xl z-0 shadow-md shadow-[#915EFF]/15"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <Icon className="w-4.5 h-4.5 z-10" />
+                  <span className="z-10">{item.name}</span>
                 </Link>
               );
             })}

@@ -103,7 +103,7 @@ const Auth = () => {
     <section className="xl:mt-12 flex xl:flex-row flex-col-reverse gap-10 overflow-hidden min-h-[700px]">
       {/* Left: Form Section */}
       <motion.div
-        variants={slideIn("left", "tween", 0.2, 1)}
+        variants={slideIn("left", "tween", 0.05, 0.2)}
         className="flex-[0.75] bg-black-100 p-8 rounded-2xl flex flex-col justify-center"
       >
         <p className={styles.sectionSubText}>{titles[mode][0]}</p>
@@ -246,7 +246,7 @@ const Auth = () => {
 
       {/* Right: Earth Animation */}
       <motion.div
-        variants={slideIn("right", "tween", 0.2, 1)}
+        variants={slideIn("right", "tween", 0.05, 0.2)}
         className="xl:flex-1 flex items-center justify-center xl:h-auto md:h-[550px] h-[350px]"
       >
         <EarthCanvas />

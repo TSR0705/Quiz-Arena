@@ -71,11 +71,8 @@ const Footer = () => {
   }, []);
 
   return (
-    <motion.footer
-      className="w-full py-8 bg-gray-900 text-white flex flex-col items-center gap-6 shadow-lg z-20"
-      initial={{ y: 100, opacity: 0 }}
-      animate={isVisible ? { y: 0, opacity: 1 } : { y: 100, opacity: 0 }}
-      transition={{ type: "spring", stiffness: 50, damping: 20 }}
+    <footer
+      className="w-full py-8 bg-[#0d0d1e] border-t border-[#2a2a40] text-white flex flex-col items-center gap-6 shadow-lg z-20"
     >
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -202,15 +199,15 @@ const Footer = () => {
         </div>
       </div>
       <motion.button
-        className="fixed bottom-4 right-4 bg-blue-600 text-white p-3 rounded-full shadow-lg"
+        className="fixed bottom-4 right-4 bg-[#915EFF] hover:bg-[#a27eff] text-white p-3 rounded-full shadow-lg border-none cursor-pointer flex items-center justify-center"
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        whileHover={{ y: -1, boxShadow: "0 4px 12px rgba(145, 94, 255, 0.3)" }}
+        whileTap={{ scale: 0.98 }}
         aria-label="Scroll to top"
       >
         <FaArrowUp size={20} />
       </motion.button>
-    </motion.footer>
+    </footer>
   );
 };
 

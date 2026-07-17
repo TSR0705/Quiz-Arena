@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { styles } from "../styles";
 import { Trophy, Calendar, Filter, Star, ShieldAlert, Compass } from "lucide-react";
+import { motion } from "framer-motion";
+import { fadeIn, zoomIn, staggerContainer } from "../utils/motion";
 
 const LeaderboardPage = () => {
   const [categories, setCategories] = useState([]);
@@ -59,9 +61,17 @@ const LeaderboardPage = () => {
   const availableTopics = activeCategory ? activeCategory.topics : [];
 
   return (
-    <div className="space-y-8">
+    <motion.div 
+      variants={staggerContainer(0.04, 0.05)}
+      initial="hidden"
+      animate="show"
+      className="space-y-8 select-none"
+    >
       {/* Filters Area */}
-      <div className={`${styles.card} grid grid-cols-1 md:grid-cols-4 gap-4 p-5 items-end`}>
+      <motion.div 
+        variants={zoomIn(0, 0.2)}
+        className={`${styles.card} grid grid-cols-1 md:grid-cols-4 gap-4 p-5 items-end`}
+      >
         {/* Period Filter */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-gray-400 flex items-center gap-1.5">
@@ -136,10 +146,13 @@ const LeaderboardPage = () => {
             <option value="hard">Hard</option>
           </select>
         </div>
-      </div>
+      </motion.div>
 
       {/* Ranks Panel */}
-      <div className={styles.card}>
+      <motion.div 
+        variants={fadeIn("up", "tween", 0.05, 0.2)}
+        className={styles.card}
+      >
         <div className="flex items-center gap-3 border-b border-[#2a2a40] pb-4 mb-6">
           <Trophy className="w-6 h-6 text-yellow-500 fill-yellow-500/10" />
           <div>
@@ -176,11 +189,6 @@ const LeaderboardPage = () => {
               </thead>
               <tbody className="divide-y divide-[#2a2a40]/30">
                 {leaderboardData.map((row) => {
-                  let badgeStyle = "text-gray-400";
-                  if (row.rank === 1) badgeStyle = "bg-yellow-500/15 text-yellow-400 border border-yellow-500/30";
-                  if (row.rank === 2) badgeStyle = "bg-slate-300/15 text-slate-300 border border-slate-300/30";
-                  if (row.rank === 3) badgeStyle = "bg-amber-700/15 text-amber-500 border border-amber-700/30";
-
                   return (
                     <tr key={row.attemptId} className="hover:bg-[#202038]/30 transition duration-150">
                       <td className="py-3.5 px-4 text-center font-black">
@@ -221,8 +229,8 @@ const LeaderboardPage = () => {
             </table>
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

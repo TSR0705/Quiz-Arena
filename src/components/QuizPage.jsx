@@ -486,9 +486,9 @@ const QuizTakingPage = () => {
         {/* Animated Question Body */}
         <motion.div
           key={attempt.currentQuestionIndex}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-6"
         >
           <div className="p-5 bg-[#202038]/50 border border-[#2a2a40] rounded-xl text-white font-medium text-base leading-relaxed">
@@ -524,10 +524,12 @@ const QuizTakingPage = () => {
               }
 
               return (
-                <button
+                <motion.button
                   key={option.id}
                   onClick={() => !isSubmitted && !isEliminated && setSelectedOptionId(option.id)}
-                  className={`w-full p-4.5 text-left rounded-xl border transition-all duration-150 active:scale-[0.99] text-sm cursor-pointer ${cardStyle}`}
+                  whileHover={!isSubmitted && !isEliminated ? { y: -0.5, borderColor: "rgba(145, 94, 255, 0.45)" } : {}}
+                  whileTap={!isSubmitted && !isEliminated ? { scale: 0.995 } : {}}
+                  className={`w-full p-4.5 text-left rounded-xl border transition-colors duration-150 text-sm cursor-pointer ${cardStyle}`}
                   disabled={isSubmitted || isEliminated}
                 >
                   <div className="flex items-center gap-3">
@@ -536,24 +538,28 @@ const QuizTakingPage = () => {
                     </span>
                     <span>{option.text}</span>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </div>
 
           {/* Action Row */}
           <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center gap-4 mt-8 border-t border-[#2a2a40] pt-6">
-            <button
+            <motion.button
+              whileHover={{ y: -0.5 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handlePrevQuestion}
               className={`${styles.btnSecondary} flex items-center justify-center gap-1 text-xs`}
               disabled={attempt.currentQuestionIndex === 0}
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Previous</span>
-            </button>
+            </motion.button>
 
             <div className="flex flex-wrap items-center gap-2">
-              <button
+              <motion.button
+                whileHover={{ y: -0.5 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={toggleFlagQuestion}
                 className={`text-xs px-4 py-2.5 rounded-xl border font-bold transition duration-200 cursor-pointer ${
                   flaggedQuestions.includes(attempt.currentQuestionIndex)
@@ -562,43 +568,51 @@ const QuizTakingPage = () => {
                 }`}
               >
                 {flaggedQuestions.includes(attempt.currentQuestionIndex) ? "Unflag" : "Flag"}
-              </button>
+              </motion.button>
 
               {!isSubmitted && (
                 <>
-                  <button
+                  <motion.button
+                    whileHover={{ y: -0.5 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={handleHint}
                     className={`text-xs px-4 py-2.5 rounded-xl border font-bold transition duration-200 cursor-pointer bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/15 disabled:opacity-50 disabled:cursor-not-allowed`}
                     disabled={hintUsed}
                   >
                     Hint
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ y: -0.5 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={handleFiftyFifty}
                     className={`text-xs px-4 py-2.5 rounded-xl border font-bold transition duration-200 cursor-pointer bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/15 disabled:opacity-50 disabled:cursor-not-allowed`}
                     disabled={fiftyFiftyUsed}
                   >
                     50/50
-                  </button>
+                  </motion.button>
                 </>
               )}
 
               {!isSubmitted ? (
-                <button
+                <motion.button
+                  whileHover={{ y: -0.5, boxShadow: "0 4px 12px rgba(145, 94, 255, 0.2)" }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleSubmitAnswer}
                   className={`${styles.btnPrimary} text-xs py-2.5 disabled:opacity-50 disabled:cursor-not-allowed`}
                   disabled={!selectedOptionId}
                 >
                   {attempt.quizMode === "practice" ? "Submit Answer" : "Save Answer"}
-                </button>
+                </motion.button>
               ) : (
-                <button
+                <motion.button
+                  whileHover={{ y: -0.5, boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)" }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleNextQuestion}
                   className={`${styles.btnPrimary} text-xs py-2.5 bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-1`}
                 >
                   <span>{attempt.currentQuestionIndex + 1 < attempt.questionsCount ? "Next Question" : "Review Paper"}</span>
                   <ChevronRight className="w-4 h-4" />
-                </button>
+                </motion.button>
               )}
             </div>
           </div>

@@ -10,6 +10,8 @@ import {
   ShieldAlert
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { fadeIn, zoomIn, staggerContainer } from "../utils/motion";
 
 const CertificatesPage = () => {
   const [certs, setCerts] = useState([]);
@@ -48,46 +50,63 @@ const CertificatesPage = () => {
       });
   }, []);
 
-  const handleVerify = (e) => {
+  const handleVerify = async (e) => {
     e.preventDefault();
     if (!verifyCode.trim()) return;
 
     setVerifying(true);
     setVerifyResult(null);
 
-    fetch(`/api/certificates/verify/${encodeURIComponent(verifyCode.trim())}`)
-      .then(async (res) => {
-        const data = await res.json();
+    try {
+      const res = await fetch(`/api/certificates/verify/${encodeURIComponent(verifyCode.trim())}`);
+      const data = await res.json();
+
+      if (res.ok) {
         setVerifyResult({
-          success: res.ok && data.valid,
-          message: res.ok && data.valid ? "Certificate is authentic!" : (data.error?.message || "Invalid certificate code."),
-          cert: data.certificate || null
+          success: true,
+          message: `This certificate was successfully verified! Perfect score achieved by ${data.certificate.displayName} in ${data.certificate.topicName}.`,
+          cert: {
+            issuedTo: data.certificate.displayName,
+            topicName: data.certificate.topicName,
+            score: data.certificate.score,
+            maxScore: data.certificate.maxScore,
+            completedAt: data.certificate.issuedAt
+          }
         });
-        setVerifying(false);
-      })
-      .catch((err) => {
-        console.error(err);
+      } else {
         setVerifyResult({
           success: false,
-          message: "A network error occurred while verifying.",
-          cert: null
+          message: data.error?.message || "Verification code not found. The certificate could not be authenticated."
         });
-        setVerifying(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setVerifyResult({
+        success: false,
+        message: "A network error occurred while verifying the certificate."
       });
+    } finally {
+      setVerifying(false);
+    }
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-20">
+      <div className="flex justify-center items-center py-20 min-h-[50vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#915EFF] mx-auto mb-4"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 select-none">
       {/* Achievements & Badges section */}
-      <div className={styles.card}>
+      <motion.div 
+        variants={zoomIn(0, 0.2)}
+        initial="hidden"
+        animate="show"
+        className={styles.card}
+      >
         <h3 className={`${styles.h3} text-yellow-500 flex items-center gap-2 mb-6 border-b border-[#2a2a40] pb-3`}>
           <span>🏆 Unlocked Achievements</span>
         </h3>
@@ -96,28 +115,40 @@ const CertificatesPage = () => {
             No achievements unlocked yet. Finish assessments with perfect scores to earn badges!
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {badges.map((badge) => (
-              <div 
+          <motion.div 
+            variants={staggerContainer(0.04, 0.05)}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6"
+          >
+            {badges.map((badge, idx) => (
+              <motion.div 
                 key={badge.code} 
-                className="bg-[#202038]/30 p-4 rounded-xl border border-yellow-500/10 hover:border-yellow-500/35 hover:shadow-md hover:shadow-yellow-500/5 transition duration-200 flex flex-col items-center text-center"
+                variants={fadeIn("up", "tween", idx * 0.03, 0.18)}
+                whileHover={{ y: -2, border: "1px solid rgba(234, 179, 8, 0.3)", boxShadow: "0 6px 16px rgba(234, 179, 8, 0.04)" }}
+                className="bg-[#202038]/30 p-4 rounded-xl border border-yellow-500/10 transition-colors duration-150 flex flex-col items-center text-center cursor-default group"
               >
-                <div className="text-4xl mb-2">{badge.icon || "🏆"}</div>
+                <div className="text-4xl mb-2 transition-transform duration-200 group-hover:scale-105">{badge.icon || "🏆"}</div>
                 <h4 className="font-bold text-yellow-400 text-sm">{badge.name}</h4>
                 <p className="text-xs text-gray-400 mt-1 leading-normal">{badge.description}</p>
                 <span className="text-[10px] text-gray-500 mt-3 font-mono">
                   Earned: {new Date(badge.earnedAt).toLocaleDateString()}
                 </span>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
 
       {/* Main Split: Certificates list vs. Verification Checker */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* User Certificates */}
-        <div className={`${styles.card} lg:col-span-2 space-y-4`}>
+        <motion.div 
+          variants={fadeIn("up", "tween", 0.05, 0.2)}
+          initial="hidden"
+          animate="show"
+          className={`${styles.card} lg:col-span-2 space-y-4`}
+        >
           <div className="border-b border-[#2a2a40] pb-3 mb-4">
             <h3 className={styles.h3}>Your Generated Certificates</h3>
           </div>
@@ -132,7 +163,7 @@ const CertificatesPage = () => {
               {certs.map((cert) => (
                 <div 
                   key={cert.certificateId} 
-                  className="bg-[#202038]/30 p-5 rounded-xl border border-[#2a2a40] hover:border-[#915EFF]/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition duration-200"
+                  className="bg-[#202038]/30 p-5 rounded-xl border border-[#2a2a40] hover:border-[#915EFF]/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition duration-150"
                 >
                   <div>
                     <h4 className="font-bold text-white text-md">{cert.topicName}</h4>
@@ -142,14 +173,18 @@ const CertificatesPage = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-3 w-full sm:w-auto shrink-0 justify-end">
-                    <button
+                    <motion.button
+                      whileHover={{ y: -1 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => navigate(`/verify-certificate?code=${cert.verificationCode}`)}
                       className={`${styles.btnSecondary} flex items-center gap-1.5 text-xs py-2`}
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
                       <span>View</span>
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ y: -1, boxShadow: "0 4px 12px rgba(145, 94, 255, 0.2)" }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => {
                         navigator.clipboard.writeText(`${window.location.origin}/verify-certificate?code=${cert.verificationCode}`);
                         alert("Verification link copied to clipboard!");
@@ -157,16 +192,21 @@ const CertificatesPage = () => {
                       className={`${styles.btnPrimary} text-xs py-2`}
                     >
                       Share Link
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Verification Check Card */}
-        <div className={styles.card}>
+        <motion.div 
+          variants={fadeIn("up", "tween", 0.1, 0.2)}
+          initial="hidden"
+          animate="show"
+          className={styles.card}
+        >
           <h3 className="text-base font-semibold text-white border-b border-[#2a2a40] pb-3 mb-4 flex items-center gap-2">
             <ShieldCheck className="w-4.5 h-4.5 text-[#915EFF]" />
             <span>Verify Certificates</span>
@@ -184,7 +224,9 @@ const CertificatesPage = () => {
               className={styles.input}
               required
             />
-            <button
+            <motion.button
+              whileHover={{ y: -1, boxShadow: "0 4px 12px rgba(145, 94, 255, 0.2)" }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={verifying}
               className={`${styles.btnPrimary} w-full text-xs py-2.5 flex items-center justify-center gap-2`}
@@ -197,16 +239,21 @@ const CertificatesPage = () => {
                   <span>Verify Authenticity</span>
                 </>
               )}
-            </button>
+            </motion.button>
           </form>
 
           {/* Verification Results Panel */}
           {verifyResult && (
-            <div className={`mt-6 p-4 rounded-xl border ${
-              verifyResult.success 
-                ? "bg-green-500/10 border-green-500/20 text-green-400" 
-                : "bg-red-500/10 border-red-500/20 text-red-400"
-            } space-y-3`}>
+            <motion.div 
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className={`mt-6 p-4 rounded-xl border ${
+                verifyResult.success 
+                  ? "bg-green-500/10 border-green-500/20 text-green-400" 
+                  : "bg-red-500/10 border-red-500/20 text-red-400"
+              } space-y-3`}
+            >
               <div className="flex items-center gap-2 font-bold text-xs">
                 {verifyResult.success ? (
                   <ShieldCheck className="w-4 h-4 text-green-400" />
@@ -227,9 +274,9 @@ const CertificatesPage = () => {
                   <p>Date: <strong className="text-white">{new Date(verifyResult.cert.completedAt).toLocaleDateString()}</strong></p>
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

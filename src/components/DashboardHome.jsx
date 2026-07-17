@@ -11,6 +11,8 @@ import {
   Clock,
   ExternalLink
 } from "lucide-react";
+import { motion } from "framer-motion";
+import { fadeIn, zoomIn, staggerContainer } from "../utils/motion";
 
 const DashboardHome = () => {
   const [data, setData] = useState(null);
@@ -36,7 +38,7 @@ const DashboardHome = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-20">
+      <div className="flex justify-center items-center py-20 min-h-[50vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#915EFF] mx-auto mb-4"></div>
       </div>
     );
@@ -54,48 +56,83 @@ const DashboardHome = () => {
 
   // Streak status text
   const streakMessage = profile.currentStreak > 0
-    ? `You're on a ${profile.currentStreak}-day streak! Keep it up!`
+    ? `You're on a ${profile.currentStreak}-day streak! Keep up!`
     : "Start a quiz today to start a learning streak!";
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 select-none">
       {/* Welcome Banner */}
-      <div className={`${styles.card} relative overflow-hidden bg-gradient-to-r from-[#1a1a2e] to-[#251b3d] p-8 border-[#915EFF]/25`}>
-        <div className="relative z-10 max-w-xl space-y-4">
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#915EFF]/20 text-[#a27eff] border border-[#915EFF]/30">
+      <motion.div 
+        variants={zoomIn(0, 0.2)}
+        initial="hidden"
+        animate="show"
+        className={`${styles.card} relative overflow-hidden bg-gradient-to-r from-[#1a1a2e] to-[#251b3d] p-8 border-[#915EFF]/25`}
+      >
+        <motion.div 
+          variants={staggerContainer(0.05, 0.02)}
+          initial="hidden"
+          animate="show"
+          className="relative z-10 max-w-xl space-y-4"
+        >
+          <motion.span 
+            variants={fadeIn("up", "tween", 0, 0.15)}
+            className="px-3 py-1 rounded-full text-xs font-bold bg-[#915EFF]/20 text-[#a27eff] border border-[#915EFF]/30 inline-block"
+          >
             Welcome Back
-          </span>
-          <h2 className="text-3xl font-black text-white">
+          </motion.span>
+          <motion.h2 
+            variants={fadeIn("up", "tween", 0.05, 0.15)}
+            className="text-3xl font-black text-white"
+          >
             Hello, {profile.displayName}! 👋
-          </h2>
-          <p className={`${styles.body} text-gray-400`}>
+          </motion.h2>
+          <motion.p 
+            variants={fadeIn("up", "tween", 0.1, 0.15)}
+            className={`${styles.body} text-gray-400`}
+          >
             Ready to test your skills? Try a practice run or step up to a timed assessment to earn XP and level up.
-          </p>
-          <div className="flex flex-wrap gap-4 pt-2">
-            <button
+          </motion.p>
+          <motion.div 
+            variants={fadeIn("up", "tween", 0.15, 0.15)}
+            className="flex flex-wrap gap-4 pt-2"
+          >
+            <motion.button
+              whileHover={{ y: -1, boxShadow: "0 4px 12px rgba(145, 94, 255, 0.2)" }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => navigate("/dashboard/quizzes")}
               className={`${styles.btnPrimary} flex items-center gap-2`}
             >
               <Play className="w-4 h-4 fill-white" />
               <span>Explore Quizzes</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ y: -1, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)" }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => navigate("/dashboard/profile")}
               className={styles.btnSecondary}
             >
               Manage Profile
-            </button>
-          </div>
-        </div>
+            </motion.button>
+          </motion.div>
+        </motion.div>
 
         {/* Abstract background gradient circle */}
-        <div className="absolute -right-24 -bottom-24 w-80 h-80 rounded-full bg-[#915EFF]/10 blur-3xl" />
-      </div>
+        <div className="absolute -right-24 -bottom-24 w-80 h-80 rounded-full bg-[#915EFF]/10 blur-3xl pointer-events-none" />
+      </motion.div>
 
       {/* Overview Stat Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <motion.div 
+        variants={staggerContainer(0.03, 0.08)}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+      >
         {/* Total XP */}
-        <div className={styles.card}>
+        <motion.div 
+          variants={fadeIn("up", "tween", 0, 0.18)}
+          whileHover={{ y: -2, border: "1px solid rgba(145, 94, 255, 0.25)", boxShadow: "0 6px 16px rgba(145, 94, 255, 0.04)" }}
+          className={styles.card}
+        >
           <div className="flex justify-between items-start">
             <div>
               <p className={styles.subtext}>Total Experience</p>
@@ -111,10 +148,14 @@ const DashboardHome = () => {
             </span>
             <span className="text-xs text-gray-500">Tier Progress</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Streak */}
-        <div className={styles.card}>
+        <motion.div 
+          variants={fadeIn("up", "tween", 0.04, 0.18)}
+          whileHover={{ y: -2, border: "1px solid rgba(249, 115, 22, 0.25)", boxShadow: "0 6px 16px rgba(249, 115, 22, 0.04)" }}
+          className={styles.card}
+        >
           <div className="flex justify-between items-start">
             <div>
               <p className={styles.subtext}>Current Streak</p>
@@ -127,10 +168,14 @@ const DashboardHome = () => {
           <p className="text-xs text-gray-400 mt-4 truncate">
             {streakMessage}
           </p>
-        </div>
+        </motion.div>
 
         {/* Total Attempts */}
-        <div className={styles.card}>
+        <motion.div 
+          variants={fadeIn("up", "tween", 0.08, 0.18)}
+          whileHover={{ y: -2, border: "1px solid rgba(59, 130, 246, 0.25)", boxShadow: "0 6px 16px rgba(59, 130, 246, 0.04)" }}
+          className={styles.card}
+        >
           <div className="flex justify-between items-start">
             <div>
               <p className={styles.subtext}>Total Attempts</p>
@@ -144,10 +189,14 @@ const DashboardHome = () => {
             <span>Avg accuracy:</span>
             <span className="text-green-400 font-bold">{stats.averageScore}%</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Leaderboard Position preview */}
-        <div className={styles.card}>
+        <motion.div 
+          variants={fadeIn("up", "tween", 0.12, 0.18)}
+          whileHover={{ y: -2, border: "1px solid rgba(234, 179, 8, 0.25)", boxShadow: "0 6px 16px rgba(234, 179, 8, 0.04)" }}
+          className={styles.card}
+        >
           <div className="flex justify-between items-start">
             <div>
               <p className={styles.subtext}>Best Accuracy</p>
@@ -161,13 +210,18 @@ const DashboardHome = () => {
             <span>Streak Peak:</span>
             <span className="text-yellow-500 font-bold">{profile.longestStreak} days</span>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Main Content Split: Recent Activity vs. Weak Topics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Attempts (2/3 width on desktop) */}
-        <div className={`${styles.card} lg:col-span-2 space-y-4`}>
+        <motion.div 
+          variants={fadeIn("up", "tween", 0.16, 0.2)}
+          initial="hidden"
+          animate="show"
+          className={`${styles.card} lg:col-span-2 space-y-4`}
+        >
           <div className="flex justify-between items-center border-b border-[#2a2a40] pb-3">
             <h3 className={styles.h3}>Recent Quiz Attempts</h3>
             <button
@@ -212,13 +266,15 @@ const DashboardHome = () => {
                       </td>
                       <td className="py-3 text-green-400 font-bold">+{attempt.xpEarned}</td>
                       <td className="py-3 text-right">
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
                           onClick={() => navigate(`/results/${attempt.attemptId}`)}
-                          className="p-1 text-gray-400 hover:text-white bg-transparent border-none cursor-pointer"
+                          className="p-1 text-gray-400 hover:text-white bg-transparent border-none cursor-pointer flex items-center justify-end w-full"
                           title="View detailed results"
                         >
-                          <ExternalLink className="w-4 h-4" />
-                        </button>
+                          <ExternalLink className="w-4.5 h-4.5" />
+                        </motion.button>
                       </td>
                     </tr>
                   ))}
@@ -226,12 +282,20 @@ const DashboardHome = () => {
               </table>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Sidebar Panel: Weak Topics & Stats Overview */}
-        <div className="space-y-8">
+        <motion.div 
+          variants={staggerContainer(0.04, 0.2)}
+          initial="hidden"
+          animate="show"
+          className="space-y-8"
+        >
           {/* Weak Topics */}
-          <div className={`${styles.card} border-red-500/20`}>
+          <motion.div 
+            variants={fadeIn("up", "tween", 0, 0.2)}
+            className={`${styles.card} border-red-500/20`}
+          >
             <div className="flex items-center gap-2 border-b border-[#2a2a40] pb-3 mb-4">
               <AlertTriangle className="w-4.5 h-4.5 text-red-400" />
               <h3 className="text-base font-semibold text-red-400">Topics Needing Work</h3>
@@ -253,22 +317,27 @@ const DashboardHome = () => {
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
 
           {/* Quick Start Card */}
-          <div className={`${styles.card} border-yellow-500/20 bg-gradient-to-b from-[#1a1a2e] to-[#201830]`}>
+          <motion.div 
+            variants={fadeIn("up", "tween", 0.05, 0.2)}
+            className={`${styles.card} border-yellow-500/20 bg-gradient-to-b from-[#1a1a2e] to-[#201830]`}
+          >
             <h3 className="text-base font-semibold text-yellow-500 mb-2">Did You Know?</h3>
             <p className="text-xs text-gray-400 leading-relaxed mb-4">
               Taking tests in <strong>Assessment Mode</strong> awards full XP and Streak increments, while <strong>Practice Mode</strong> lets you learn step-by-step with explanation tips.
             </p>
-            <button
+            <motion.button
+              whileHover={{ y: -1, boxShadow: "0 4px 12px rgba(202, 138, 4, 0.2)" }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => navigate("/dashboard/quizzes")}
               className={`${styles.btnPrimary} w-full text-xs py-2 bg-yellow-600 hover:bg-yellow-700`}
             >
               Start Custom Quiz
-            </button>
-          </div>
-        </div>
+            </motion.button>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   );
