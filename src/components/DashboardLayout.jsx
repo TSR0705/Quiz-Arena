@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { 
@@ -10,16 +10,32 @@ import {
   LogOut, 
   Menu, 
   X,
-  Compass
+  Compass,
+  Bell,
+  Search,
+  ChevronRight,
+  Terminal,
+  Settings,
+  HelpCircle
 } from "lucide-react";
 import { styles } from "../styles";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const DashboardLayout = () => {
   const { currentUser, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Refs for closing dropdowns on click outside
+  const notificationsRef = useRef(null);
+  const profileMenuRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   const handleLogoutClick = async () => {
     const success = await logout();
@@ -27,6 +43,32 @@ const DashboardLayout = () => {
       navigate("/");
     }
   };
+
+  // Keyboard shortcut Ctrl + K / Cmd + K to toggle command palette
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Click outside listener
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notificationsRef.current && !notificationsRef.current.contains(e.target)) {
+        setNotificationsOpen(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const navItems = [
     { name: "Overview", path: "/dashboard", icon: Home },
@@ -36,18 +78,115 @@ const DashboardLayout = () => {
     { name: "Profile", path: "/dashboard/profile", icon: User },
   ];
 
-  const getPageTitle = () => {
-    const currentItem = navItems.find(item => item.path === location.pathname);
-    return currentItem ? currentItem.name : "Dashboard";
-  };
-
   if (!currentUser) {
-    // If not loaded yet or not logged in, we will handle in App.jsx routing guard
     return null;
   }
 
+  // Get breadcrumb parts
+  const getBreadcrumbs = () => {
+    const paths = location.pathname.split("/").filter(Boolean);
+    return (
+      <div className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold select-none">
+        <span>App</span>
+        <ChevronRight className="w-3 h-3 text-gray-600" />
+        {paths.map((p, idx) => {
+          const isLast = idx === paths.length - 1;
+          const label = p.charAt(0).toUpperCase() + p.slice(1);
+          return (
+            <React.Fragment key={p}>
+              {idx > 0 && <ChevronRight className="w-3 h-3 text-gray-600" />}
+              <span className={isLast ? "text-gray-300 font-bold" : ""}>{label}</span>
+            </React.Fragment>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // Mock Notification Feed
+  const notifications = [
+    { id: 1, text: "🏆 JavaScript Expert Badge earned successfully!", date: "2h ago" },
+    { id: 2, text: "⚡ Assessment Run record updated on Leaderboard.", date: "1d ago" },
+    { id: 3, text: "✨ Verification Code ready for your certificate.", date: "2d ago" }
+  ];
+
+  // Command Palette Items
+  const paletteCommands = [
+    { name: "Go to Overview Dashboard", path: "/dashboard", description: "Stats summary & streak" },
+    { name: "Configure & Start Quiz", path: "/dashboard/quizzes", description: "Select category & difficulty" },
+    { name: "View Global Leaderboard", path: "/dashboard/leaderboard", description: "Check top submissions" },
+    { name: "Generate & Verify Certificates", path: "/dashboard/certificates", description: "Claim badges" },
+    { name: "Manage Profile Settings", path: "/dashboard/profile", description: "Display name & email" },
+  ];
+
+  const filteredCommands = paletteCommands.filter((cmd) =>
+    cmd.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className={`h-screen w-screen overflow-hidden ${styles.bgMain} text-white flex flex-row relative font-sans`}>
+      <AnimatePresence>
+        {/* COMMAND PALETTE MODAL (Ctrl + K) */}
+        {commandPaletteOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-[#0d0d1e]/85 backdrop-blur-sm z-50 flex items-start justify-center pt-24 px-4"
+            onClick={() => setCommandPaletteOpen(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.98, y: -10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.98, y: -10 }}
+              transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-[#1a1a2e] w-full max-w-xl rounded-2xl border border-[#2a2a40] shadow-2xl overflow-hidden flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Palette Input bar */}
+              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#2a2a40]">
+                <Terminal className="w-4 h-4 text-[#915EFF]" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Type a command or page to navigate..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-transparent text-white border-none outline-none text-sm w-full placeholder:text-gray-600"
+                  autoFocus
+                />
+                <span className="text-[10px] text-gray-500 bg-[#202038] px-2 py-0.5 rounded border border-[#2a2a40] uppercase">ESC</span>
+              </div>
+
+              {/* Commands List */}
+              <div className="max-h-[300px] overflow-y-auto p-2 space-y-1 no-scrollbar">
+                {filteredCommands.length === 0 ? (
+                  <p className="text-gray-500 text-xs py-6 text-center">No commands match your query.</p>
+                ) : (
+                  filteredCommands.map((cmd) => (
+                    <button
+                      key={cmd.path}
+                      onClick={() => {
+                        navigate(cmd.path);
+                        setCommandPaletteOpen(false);
+                        setSearchQuery("");
+                      }}
+                      className="w-full text-left p-3 hover:bg-[#202038]/50 rounded-xl flex items-center justify-between group transition duration-150 border-none bg-transparent cursor-pointer"
+                    >
+                      <div>
+                        <p className="text-xs font-semibold text-white group-hover:text-[#a27eff] transition duration-150">{cmd.name}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">{cmd.description}</p>
+                      </div>
+                      <span className="text-[10px] text-[#915EFF] font-bold opacity-0 group-hover:opacity-100 transition duration-150">Jump ↩</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* LEFT SIDEBAR (Desktop) */}
       <aside className={`hidden md:flex flex-col w-64 ${styles.bgCard} border-r border-[#2a2a40] shrink-0 p-6 justify-between h-screen overflow-y-auto no-scrollbar select-none z-10`}>
         <div className="flex flex-col gap-8">
@@ -177,42 +316,117 @@ const DashboardLayout = () => {
             >
               <Menu className="w-6 h-6" />
             </button>
-            <h1 className="text-xl font-bold tracking-tight text-white hidden sm:block">
-              {getPageTitle()}
-            </h1>
+            {/* Breadcrumb Info instead of static title */}
+            <div className="hidden sm:block">
+              {getBreadcrumbs()}
+            </div>
           </div>
 
-          {/* User profile pill */}
+          {/* Quick Controls & Profile Info */}
           <div className="flex items-center gap-4">
-            {/* XP and Level Info */}
-            <div className="flex items-center gap-2">
-              <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#915EFF]/15 text-[#915EFF] border border-[#915EFF]/30">
-                Lvl {currentUser.currentLevel || 1}
+            
+            {/* Vercel-like Search trigger button */}
+            <button
+              onClick={() => setCommandPaletteOpen(true)}
+              className="hidden sm:flex items-center justify-between w-48 bg-[#202038]/50 hover:bg-[#2e2e4d]/40 border border-[#2a2a40] hover:border-[#915EFF]/40 rounded-xl px-3 py-1.5 text-xs text-gray-500 transition duration-150 cursor-pointer"
+            >
+              <span className="flex items-center gap-1.5">
+                <Search className="w-3.5 h-3.5" />
+                <span>Search pages...</span>
               </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-500/15 text-yellow-400 border border-yellow-500/30">
-                ✨ {currentUser.totalXp || 0} XP
-              </span>
+              <kbd className="text-[9px] font-mono bg-[#1a1a2e] px-1.5 py-0.5 rounded border border-[#2a2a40] text-gray-400 uppercase">⌘K</kbd>
+            </button>
+
+            {/* Notification Center Trigger */}
+            <div className="relative" ref={notificationsRef}>
+              <button
+                onClick={() => setNotificationsOpen((prev) => !prev)}
+                className="p-2 text-gray-400 hover:text-white bg-[#202038]/50 hover:bg-[#2e2e4d]/40 border border-[#2a2a40] hover:border-[#915EFF]/40 rounded-xl transition duration-150 cursor-pointer"
+              >
+                <Bell className="w-4 h-4" />
+                {/* Unread dot */}
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500" />
+              </button>
+
+              <AnimatePresence>
+                {notificationsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute right-0 mt-2.5 w-72 bg-[#1a1a2e] border border-[#2a2a40] rounded-2xl shadow-xl p-4 space-y-3 z-40 select-none"
+                  >
+                    <div className="flex justify-between items-center border-b border-[#2a2a40]/60 pb-2">
+                      <span className="text-xs font-bold text-white">Notifications Feed</span>
+                      <span className="text-[10px] text-gray-500 bg-[#202038] px-2 py-0.5 rounded">3 Updates</span>
+                    </div>
+                    <div className="divide-y divide-[#2a2a40]/40 max-h-[220px] overflow-y-auto pr-1 space-y-2.5 no-scrollbar">
+                      {notifications.map((n) => (
+                        <div key={n.id} className="pt-2 text-left space-y-1">
+                          <p className="text-xs text-gray-200 leading-normal">{n.text}</p>
+                          <span className="text-[9px] text-gray-500 font-medium block">{n.date}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Divider */}
             <div className="w-[1px] h-6 bg-[#2a2a40]" />
 
-            {/* Name and avatar */}
-            <Link to="/dashboard/profile" className="flex items-center gap-2.5 group active:scale-98 transition duration-150">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-semibold text-white group-hover:text-[#a27eff] transition duration-150">
-                  {currentUser.displayName}
-                </p>
-                <p className="text-[10px] text-gray-400 tracking-wider uppercase font-medium">
-                  {currentUser.role}
-                </p>
-              </div>
-              <img
-                src={currentUser.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.displayName || 'user'}`}
-                alt="avatar"
-                className="w-9 h-9 rounded-xl border border-[#915EFF]/40 bg-[#1a1a2e] group-hover:border-[#915EFF] transition duration-150"
-              />
-            </Link>
+            {/* User Profile dropdown */}
+            <div className="relative" ref={profileMenuRef}>
+              <button
+                onClick={() => setProfileDropdownOpen((prev) => !prev)}
+                className="flex items-center gap-2.5 group active:scale-98 transition duration-150 bg-transparent border-none cursor-pointer"
+              >
+                <img
+                  src={currentUser.avatarUrl || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.displayName || 'user'}`}
+                  alt="avatar"
+                  className="w-9 h-9 rounded-xl border border-[#915EFF]/40 bg-[#1a1a2e] group-hover:border-[#915EFF] transition duration-150"
+                />
+              </button>
+
+              <AnimatePresence>
+                {profileDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute right-0 mt-2.5 w-56 bg-[#1a1a2e] border border-[#2a2a40] rounded-2xl shadow-xl p-2.5 space-y-1.5 z-40"
+                  >
+                    <div className="px-2.5 py-2 text-left border-b border-[#2a2a40]/60">
+                      <p className="text-xs font-bold text-white leading-normal truncate">{currentUser.displayName}</p>
+                      <p className="text-[10px] text-gray-500 truncate mt-0.5">{currentUser.email}</p>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        navigate("/dashboard/profile");
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-gray-300 hover:text-white hover:bg-[#202038] flex items-center gap-2 border-none bg-transparent cursor-pointer"
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                      <span>Account Settings</span>
+                    </button>
+                    
+                    <button
+                      onClick={handleLogoutClick}
+                      className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 flex items-center gap-2 border-none bg-transparent cursor-pointer"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Sign Out</span>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
           </div>
         </header>
 

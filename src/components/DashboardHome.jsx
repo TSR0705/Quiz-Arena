@@ -56,7 +56,7 @@ const DashboardHome = () => {
 
   // Streak status text
   const streakMessage = profile.currentStreak > 0
-    ? `You're on a ${profile.currentStreak}-day streak! Keep up!`
+    ? `You're on a ${profile.currentStreak}-day streak! Keep it up!`
     : "Start a quiz today to start a learning streak!";
 
   return (
@@ -212,6 +212,136 @@ const DashboardHome = () => {
           </div>
         </motion.div>
       </motion.div>
+
+      {/* SaaS Dashboard Additions: Velocity & Progress Insights */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        {/* XP LEVEL PROGRESS & NEXT LEVEL TARGET */}
+        <motion.div
+          variants={fadeIn("up", "tween", 0.1, 0.2)}
+          initial="hidden"
+          animate="show"
+          whileHover={{ y: -1 }}
+          className={`${styles.card} md:col-span-1 space-y-4`}
+        >
+          <div className="flex justify-between items-center border-b border-[#2a2a40] pb-2.5">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#915EFF]">Level Progression</h4>
+            <span className="text-[10px] text-gray-500 font-mono">Rank Tier 1</span>
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-end">
+              <span className="text-sm font-black text-white">Level {profile.currentLevel}</span>
+              <span className="text-xs text-gray-400 font-semibold">{profile.totalXp} / {profile.currentLevel * 300 + 500} XP</span>
+            </div>
+            {/* Progress bar */}
+            <div className="w-full bg-[#202038] h-2 rounded-full overflow-hidden border border-[#2a2a40]">
+              <div 
+                className="bg-gradient-to-r from-[#915EFF] to-[#a27eff] h-full rounded-full transition-all duration-500"
+                style={{ width: `${Math.min((profile.totalXp / (profile.currentLevel * 300 + 500)) * 100, 100)}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-gray-500 leading-normal">
+              Earn another {Math.max((profile.currentLevel * 300 + 500) - profile.totalXp, 0)} XP to rank up and claim your next certificate badge.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* WEEKLY ACTIVITY HEATMAP CONTAINER */}
+        <motion.div
+          variants={fadeIn("up", "tween", 0.12, 0.2)}
+          initial="hidden"
+          animate="show"
+          whileHover={{ y: -1 }}
+          className={`${styles.card} md:col-span-2 space-y-4`}
+        >
+          <div className="flex justify-between items-center border-b border-[#2a2a40] pb-2.5">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-green-400">Learning Velocity (Last 4 Weeks)</h4>
+            <span className="text-[10px] text-gray-500 font-mono">4 week heatmap</span>
+          </div>
+
+          <div className="flex items-center gap-4 py-1.5 overflow-x-auto no-scrollbar">
+            {/* Grid of days */}
+            <div className="grid grid-flow-col grid-rows-7 gap-1.5 shrink-0">
+              {[...Array(28)].map((_, i) => {
+                // Mock activity levels (days with active quiz runs)
+                let bgClass = "bg-[#202038]/40 border-[#2a2a40]";
+                if (i % 5 === 0) bgClass = "bg-green-500/20 border-green-500/20";
+                if (i % 7 === 0) bgClass = "bg-green-500/40 border-green-500/30";
+                if (i === 12 || i === 22) bgClass = "bg-[#915EFF]/30 border-[#915EFF]/30"; // quiz streak milestone days
+                
+                return (
+                  <div 
+                    key={i} 
+                    className={`w-3.5 h-3.5 rounded border transition-colors duration-150 hover:scale-105 ${bgClass}`}
+                    title={`Day ${i + 1}: Quiz runs completed`}
+                  />
+                );
+              })}
+            </div>
+            <div className="text-xs text-gray-400 leading-relaxed font-sans space-y-1">
+              <p>🟢 <strong>Active challenge streaks</strong></p>
+              <p className="text-[10px] text-gray-500">Your contribution heat matches assessment milestones and daily run checkins.</p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* CONTINUOUS WORKSPACE RUNS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        {/* RECOMMENDED QUIZ & CONTINUE TARGET */}
+        <motion.div
+          variants={fadeIn("up", "tween", 0.14, 0.2)}
+          initial="hidden"
+          animate="show"
+          className={styles.card}
+        >
+          <h4 className="text-xs font-bold uppercase tracking-wider text-yellow-500 mb-3">Recommended For You</h4>
+          <div className="bg-[#202038]/50 p-4 rounded-xl border border-yellow-500/10 flex justify-between items-start gap-4">
+            <div className="space-y-1">
+              <h5 className="font-bold text-white text-sm">Data Structures Challenge</h5>
+              <p className="text-xs text-gray-400">Category: Software Engineering • 5 Questions</p>
+              <p className="text-[10px] text-[#915EFF] font-bold">Unlocks Lvl {profile.currentLevel + 1} Certificate Badge</p>
+            </div>
+            <motion.button
+              whileHover={{ y: -0.5 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate("/dashboard/quizzes")}
+              className={`${styles.btnPrimary} text-xs py-1.5 px-3 bg-yellow-600 hover:bg-yellow-700`}
+            >
+              Start Run
+            </motion.button>
+          </div>
+        </motion.div>
+
+        {/* QUICK ACTION SHORTCUTS */}
+        <motion.div
+          variants={fadeIn("up", "tween", 0.16, 0.2)}
+          initial="hidden"
+          animate="show"
+          className={styles.card}
+        >
+          <h4 className="text-xs font-bold uppercase tracking-wider text-[#915EFF] mb-3">Quick Shortcut Actions</h4>
+          <div className="grid grid-cols-2 gap-3.5">
+            <motion.button
+              whileHover={{ y: -0.5 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate("/dashboard/quizzes")}
+              className={`${styles.btnSecondary} text-xs py-2`}
+            >
+              🚀 Select Category
+            </motion.button>
+            <motion.button
+              whileHover={{ y: -0.5 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate("/dashboard/profile")}
+              className={`${styles.btnSecondary} text-xs py-2`}
+            >
+              👤 Update Settings
+            </motion.button>
+          </div>
+        </motion.div>
+      </div>
 
       {/* Main Content Split: Recent Activity vs. Weak Topics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
