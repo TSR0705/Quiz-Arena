@@ -48,7 +48,6 @@ The platform features a beautiful 3D-themed interface with dynamic animations, a
 | 🧠 Youth Education       | Makes civic topics engaging and interactive       |
 | 🇮🇳 Nation Building       | Encourages understanding of democracy and law       |
 
----
 
 ---
 
@@ -80,13 +79,8 @@ The platform features a beautiful 3D-themed interface with dynamic animations, a
 
 ---
 
- 
 
 
-
-
-
-```
 ## 🧠 Future Enhancements
 
 ✅ AI-generated adaptive quizzes
@@ -98,7 +92,9 @@ The platform features a beautiful 3D-themed interface with dynamic animations, a
 🏆 Leaderboards and user profiles
 
 ☁️ Backend API with database integration
-```
+
+---
+
 🙌 Contribution Guidelines
 Contributions are welcome! Feel free to fork the repository, create a new branch, and submit a pull request. If you’d like to propose a feature, open an issue first to discuss your idea.
 
