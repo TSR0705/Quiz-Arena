@@ -76,22 +76,8 @@ The platform features a beautiful 3D-themed interface with dynamic animations, a
    git clone https://github.com/TSR0705/Samvidhan-Setu-Quiz-App.git
    cd Samvidhan-Setu-Quiz-App
 
+
 
----
-
-
-
-## 🧠 Future Enhancements
-
-✅ AI-generated adaptive quizzes
-
-🌐 Multilingual quiz support (English, Hindi, etc.)
-
-📱 Progressive Web App (PWA) integration
-
-🏆 Leaderboards and user profiles
-
-☁️ Backend API with database integration
 
 ---
 
