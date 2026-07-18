@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeIn, zoomIn, staggerContainer } from "../utils/motion";
+import { GithubCalendar } from "./ui/retro-space-shooter-git-hub-calendar";
 
 const DashboardHome = () => {
   const [data, setData] = useState(null);
@@ -252,36 +253,25 @@ const DashboardHome = () => {
           initial="hidden"
           animate="show"
           whileHover={{ y: -1 }}
-          className={`${styles.card} md:col-span-2 space-y-4`}
+          className={`${styles.card} md:col-span-2 space-y-4 overflow-hidden`}
         >
           <div className="flex justify-between items-center border-b border-[#2a2a40] pb-2.5">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-green-400">Learning Velocity (Last 4 Weeks)</h4>
-            <span className="text-[10px] text-gray-500 font-mono">4 week heatmap</span>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-green-400">Learning Velocity (GitHub Synergy)</h4>
+            <span className="text-[10px] text-gray-500 font-mono">Space Shooter Calendar</span>
           </div>
 
-          <div className="flex items-center gap-4 py-1.5 overflow-x-auto no-scrollbar">
-            {/* Grid of days */}
-            <div className="grid grid-flow-col grid-rows-7 gap-1.5 shrink-0">
-              {[...Array(28)].map((_, i) => {
-                // Mock activity levels (days with active quiz runs)
-                let bgClass = "bg-[#202038]/40 border-[#2a2a40]";
-                if (i % 5 === 0) bgClass = "bg-green-500/20 border-green-500/20";
-                if (i % 7 === 0) bgClass = "bg-green-500/40 border-green-500/30";
-                if (i === 12 || i === 22) bgClass = "bg-[#915EFF]/30 border-[#915EFF]/30"; // quiz streak milestone days
-                
-                return (
-                  <div 
-                    key={i} 
-                    className={`w-3.5 h-3.5 rounded border transition-colors duration-150 hover:scale-105 ${bgClass}`}
-                    title={`Day ${i + 1}: Quiz runs completed`}
-                  />
-                );
-              })}
-            </div>
-            <div className="text-xs text-gray-400 leading-relaxed font-sans space-y-1">
-              <p>🟢 <strong>Active challenge streaks</strong></p>
-              <p className="text-[10px] text-gray-500">Your contribution heat matches assessment milestones and daily run checkins.</p>
-            </div>
+          <div className="w-full overflow-x-auto no-scrollbar py-1">
+            <GithubCalendar 
+              username="Jahirul077" 
+              cellSize={9} 
+              cellGap={3} 
+              startsOnSunday={true} 
+              showMonthLabels={true} 
+              showStats={true} 
+              showLegend={true} 
+              theme="github"
+              className="border-none bg-transparent"
+            />
           </div>
         </motion.div>
       </div>
