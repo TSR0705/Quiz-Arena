@@ -2,6 +2,7 @@
 
 import { memo, useMemo, useState, useEffect, useId, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { AlertTriangle } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,8 +32,8 @@ export type ThemeColors = {
 export type CellShape = "rounded" | "circle";
 
 export type GithubCalendarProps = {
-  profile?: any; // Auth profile containing streaks
-  stats?: any;   // Overview aggregate stats
+  profile?: any;
+  stats?: any;
   cellSize?: number;
   cellGap?: number;
   cellShape?: CellShape;
@@ -230,8 +231,6 @@ function CalendarSkeleton({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export const GithubCalendar = memo(function GithubCalendar({
-  profile,
-  stats: userStats,
   cellSize = 9,
   cellGap = 3,
   cellShape = "rounded",
@@ -242,8 +241,6 @@ export const GithubCalendar = memo(function GithubCalendar({
 }: GithubCalendarProps) {
   const id = useId();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [gameActive, setGameActive] = useState(false);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // ── Fetch state ────────────────────────────────────────────────────────
   const [activityData, setActivityData] = useState<ContributionData | null>(null);
@@ -306,7 +303,7 @@ export const GithubCalendar = memo(function GithubCalendar({
   // ── Dimensions ────────────────────────────────────────────────────────
   const step = cellSize + cellGap;
   const gridOffsetX = 32; // Offset for Mon/Wed/Fri labels on left
-  const monthLabelHeight = showMonthLabels && !gameActive ? 20 : 0;
+  const monthLabelHeight = showMonthLabels ? 20 : 0;
   const svgWidth = gridOffsetX + weeks.length * step - cellGap;
   const svgHeight = monthLabelHeight + 7 * step - cellGap;
 
@@ -316,315 +313,6 @@ export const GithubCalendar = memo(function GithubCalendar({
       scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
     }
   }, [activityData]);
-
-  // Game loop and autoplay logic (styled for QuizArena brand)
-  useEffect(() => {
-    if (!gameActive || !activityData) {
-      weeks.forEach((week) => {
-        week.forEach((date) => {
-          if (!date) return;
-          const rect = document.getElementById(`cell-${id}-${date}`);
-          if (rect) {
-            rect.style.opacity = "1";
-            rect.style.pointerEvents = "auto";
-            const originalLevel = activityData?.[date]?.level ?? 0;
-            const originalColor =
-              ACTIVE_THEME[`level${originalLevel}` as keyof ThemeColors] ||
-              ACTIVE_THEME.level0;
-            rect.setAttribute("fill", originalColor);
-          }
-        });
-      });
-      return;
-    }
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let animationFrameId: number;
-    const width = svgWidth;
-    const height = svgHeight + 80;
-    canvas.width = width;
-    canvas.height = height;
-
-    const cellLevels = new Map<string, number>();
-    weeks.forEach((week) => {
-      week.forEach((date) => {
-        if (!date) return;
-        const entry = activityData[date];
-        const initialLevel = entry?.level ?? 0;
-        cellLevels.set(date, initialLevel);
-        const rect = document.getElementById(`cell-${id}-${date}`);
-        if (rect) {
-          if (initialLevel === 0) {
-            rect.style.opacity = "0";
-            rect.style.pointerEvents = "none";
-          } else {
-            rect.style.opacity = "1";
-            rect.style.pointerEvents = "auto";
-          }
-        }
-      });
-    });
-
-    const player = {
-      x: width / 2 - 15,
-      y: height - 25,
-      width: 30,
-      height: 20,
-      speed: 4,
-      direction: 1, // 1 = right, -1 = left
-      color: "#915EFF", // Brand accent purple
-    };
-
-    type GameBullet = {
-      x: number;
-      y: number;
-      vy: number;
-      width: number;
-      height: number;
-      color: string;
-    };
-    let bullets: GameBullet[] = [];
-    let lastShot = 0;
-    const cooldown = 140;
-
-    const shoot = () => {
-      bullets.push({
-        x: player.x + player.width / 2 - 1.5,
-        y: player.y - 4,
-        vy: -6,
-        width: 3,
-        height: 8,
-        color: "#cbd5e1", // White/silver laser
-      });
-    };
-
-    const stars = Array.from({ length: 100 }).map(() => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      speed: Math.random() * 0.4 + 0.1,
-      size: Math.random() * 1.2 + 0.5,
-      alpha: Math.random() * 0.5 + 0.1,
-    }));
-
-    type GameParticle = {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      color: string;
-      size: number;
-      alpha: number;
-      life: number;
-      maxLife: number;
-    };
-    let particles: GameParticle[] = [];
-    const explode = (x: number, y: number, color: string) => {
-      for (let i = 0; i < 10; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 2.5 + 1.2;
-        particles.push({
-          x,
-          y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          color,
-          size: Math.random() * 2 + 1,
-          alpha: 1,
-          life: 0,
-          maxLife: Math.random() * 15 + 15,
-        });
-      }
-    };
-
-    const update = () => {
-      let minWi = -1;
-      let maxWi = -1;
-      weeks.forEach((week, wi) => {
-        week.forEach((date) => {
-          if (!date) return;
-          if ((cellLevels.get(date) ?? 0) > 0) {
-            if (minWi === -1) minWi = wi;
-            minWi = Math.min(minWi, wi);
-            maxWi = Math.max(maxWi, wi);
-          }
-        });
-      });
-
-      let minX = gridOffsetX;
-      let maxX = width - player.width;
-      if (minWi !== -1 && maxWi !== -1) {
-        minX = gridOffsetX + minWi * step;
-        maxX = Math.max(
-          minX,
-          Math.min(width - player.width, gridOffsetX + (maxWi + 1) * step - player.width),
-        );
-      }
-
-      player.x = Math.max(minX, Math.min(maxX, player.x));
-      player.x += player.speed * player.direction;
-      if (player.x >= maxX) {
-        player.x = maxX;
-        player.direction = -1;
-      } else if (player.x <= minX) {
-        player.x = minX;
-        player.direction = 1;
-      }
-
-      const now = Date.now();
-      if (now - lastShot >= cooldown) {
-        shoot();
-        lastShot = now;
-      }
-
-      let anyActive = false;
-      cellLevels.forEach((level) => {
-        if (level > 0) anyActive = true;
-      });
-
-      if (!anyActive) {
-        weeks.forEach((week) => {
-          week.forEach((date) => {
-            if (!date) return;
-            const originalLevel = activityData[date]?.level ?? 0;
-            cellLevels.set(date, originalLevel);
-            const rect = document.getElementById(`cell-${id}-${date}`);
-            if (rect) {
-              const originalColor =
-                ACTIVE_THEME[`level${originalLevel}` as keyof ThemeColors] ||
-                ACTIVE_THEME.level0;
-              rect.setAttribute("fill", originalColor);
-              if (originalLevel === 0) {
-                rect.style.opacity = "0";
-                rect.style.pointerEvents = "none";
-              } else {
-                rect.style.opacity = "1";
-                rect.style.pointerEvents = "auto";
-              }
-            }
-          });
-        });
-      }
-
-      stars.forEach((s) => {
-        s.y += s.speed;
-        if (s.y > height) {
-          s.y = 0;
-          s.x = Math.random() * width;
-        }
-      });
-
-      bullets = bullets.filter((b) => {
-        b.y += b.vy;
-        return b.y > 0;
-      });
-
-      particles.forEach((p) => {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life++;
-        p.alpha = 1 - p.life / p.maxLife;
-      });
-      particles = particles.filter((p) => p.life < p.maxLife);
-
-      bullets.forEach((bullet, bulletIdx) => {
-        weeks.forEach((week, wi) => {
-          week.forEach((date, di) => {
-            if (!date) return;
-
-            const currentLevel = cellLevels.get(date) ?? 0;
-            if (currentLevel === 0) return;
-
-            const cellX = gridOffsetX + wi * step;
-            const cellY = monthLabelHeight + di * step;
-
-            if (
-              bullet.x < cellX + cellSize &&
-              bullet.x + bullet.width > cellX &&
-              bullet.y < cellY + cellSize &&
-              bullet.y + bullet.height > cellY
-            ) {
-              bullets.splice(bulletIdx, 1);
-
-              const newLevel = currentLevel - 1;
-              cellLevels.set(date, newLevel);
-
-              const rect = document.getElementById(`cell-${id}-${date}`);
-              if (rect) {
-                if (newLevel === 0) {
-                  rect.style.opacity = "0";
-                  rect.style.pointerEvents = "none";
-                } else {
-                  const newColor =
-                    ACTIVE_THEME[`level${newLevel}` as keyof ThemeColors] ||
-                    ACTIVE_THEME.level0;
-                  rect.setAttribute("fill", newColor);
-                }
-              }
-
-              const hitColor =
-                ACTIVE_THEME[`level${currentLevel}` as keyof ThemeColors] ||
-                ACTIVE_THEME.level0;
-              explode(cellX + cellSize / 2, cellY + cellSize / 2, hitColor);
-            }
-          });
-        });
-      });
-    };
-
-    const render = () => {
-      ctx.clearRect(0, 0, width, height);
-
-      ctx.fillStyle = "#ffffff";
-      stars.forEach((s) => {
-        ctx.globalAlpha = s.alpha;
-        ctx.fillRect(s.x, s.y, s.size, s.size);
-      });
-      ctx.globalAlpha = 1.0;
-
-      bullets.forEach((b) => {
-        ctx.fillStyle = b.color;
-        ctx.fillRect(b.x, b.y, b.width, b.height);
-      });
-
-      particles.forEach((p) => {
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.alpha;
-        ctx.fillRect(p.x, p.y, p.size, p.size);
-      });
-      ctx.globalAlpha = 1.0;
-
-      ctx.fillStyle = player.color;
-      ctx.shadowColor = player.color;
-      ctx.shadowBlur = 6;
-      ctx.beginPath();
-      ctx.moveTo(player.x + player.width / 2, player.y);
-      ctx.lineTo(player.x + player.width, player.y + player.height);
-      ctx.lineTo(player.x + player.width * 0.7, player.y + player.height * 0.75);
-      ctx.lineTo(player.x + player.width * 0.3, player.y + player.height * 0.75);
-      ctx.lineTo(player.x, player.y + player.height);
-      ctx.closePath();
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    };
-
-    const loop = () => {
-      update();
-      render();
-      if (gameActive) {
-        animationFrameId = requestAnimationFrame(loop);
-      }
-    };
-
-    animationFrameId = requestAnimationFrame(loop);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [gameActive, activityData, weeks, step, cellSize, cellGap, monthLabelHeight, id]);
 
   // ── Loading / error states ───────────────────────────
   if (loading) {
@@ -643,13 +331,12 @@ export const GithubCalendar = memo(function GithubCalendar({
   const cellRx = cellShape === "circle" ? cellSize / 2 : 2.5;
 
   return (
-    <div className={cn("w-full transition-all duration-300 relative", gameActive ? "bg-black/90 p-4 rounded-2xl border border-neutral-800" : "", className)}>
-      
+    <div className={cn("w-full transition-all duration-300 relative", className)}>
       {/* Dynamic Month Labels Column Grid */}
       <div className="w-full">
         <div
           ref={scrollRef}
-          className={cn("relative overflow-x-auto no-scrollbar transition-all duration-300", gameActive ? "pb-[80px]" : "")}
+          className="relative overflow-x-auto no-scrollbar transition-all duration-300"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           <svg
@@ -659,7 +346,7 @@ export const GithubCalendar = memo(function GithubCalendar({
             className="overflow-visible"
           >
             {/* Weekday indicator labels (Mon, Wed, Fri) */}
-            {showMonthLabels && !gameActive && (
+            {showMonthLabels && (
               <>
                 <text x={0} y={monthLabelHeight + 1 * step + cellSize/2 + 3.5} fontSize={10} fill="#6b7280" className="font-semibold select-none">Mon</text>
                 <text x={0} y={monthLabelHeight + 3 * step + cellSize/2 + 3.5} fontSize={10} fill="#6b7280" className="font-semibold select-none">Wed</text>
@@ -668,7 +355,7 @@ export const GithubCalendar = memo(function GithubCalendar({
             )}
 
             {/* Month labels on top */}
-            {showMonthLabels && !gameActive &&
+            {showMonthLabels &&
               (() => {
                 const byWeek = new Map<number, string>();
                 monthLabels.forEach(({ label, weekIndex }) => byWeek.set(weekIndex, label));
@@ -722,12 +409,10 @@ export const GithubCalendar = memo(function GithubCalendar({
                     fill={ACTIVE_THEME[`level${level}` as keyof ThemeColors]}
                     style={{
                       transition: "opacity 0.1s, fill 0.2s",
-                      opacity: gameActive ? (level === 0 || !date ? 0 : 1) : 1,
-                      pointerEvents: gameActive ? (level === 0 || !date ? "none" : "auto") : "auto",
                       cursor: date ? "pointer" : "default"
                     }}
                     onMouseEnter={() => {
-                      if (!date || gameActive) return;
+                      if (!date) return;
                       setTooltip({
                         visible: true,
                         date,
@@ -742,15 +427,6 @@ export const GithubCalendar = memo(function GithubCalendar({
               }),
             )}
           </svg>
-
-          {/* Spaceship Game overlay canvas */}
-          {gameActive && (
-            <canvas
-              ref={canvasRef}
-              className="absolute inset-0 pointer-events-auto z-10 cursor-crosshair"
-              style={{ width: svgWidth, height: svgHeight + 80 }}
-            />
-          )}
 
           {/* Floating Tooltip details */}
           {tooltip.visible && tooltip.data && (
@@ -779,50 +455,29 @@ export const GithubCalendar = memo(function GithubCalendar({
           )}
         </div>
 
-        {/* Legend panel and game switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-3 border-t border-[#2a2a40]/30 pt-3">
+        {/* Legend panel and aggregate statistics */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-3 border-t border-[#2a2a40]/30 pt-3">
           {/* Legend indicator */}
           {showLegend && (
-            <div className="flex items-center gap-4 text-[10px] text-gray-500 tracking-wider uppercase font-semibold">
-              <div className="flex items-center gap-1.5">
-                <span>Less</span>
-                {([0, 1, 2, 3, 4] as ContributionLevel[]).map((level) => (
-                  <svg key={level} width={cellSize} height={cellSize}>
-                    <rect
-                      width={cellSize}
-                      height={cellSize}
-                      rx={cellRx}
-                      fill={ACTIVE_THEME[`level${level}`]}
-                    />
-                  </svg>
-                ))}
-                <span>More</span>
-              </div>
-
-              {/* Game Mode switch trigger */}
-              <div className="flex items-center gap-2 border-l border-[#2a2a40]/70 pl-4">
-                <span className="text-[10px] text-gray-400 select-none uppercase font-bold">Game Mode</span>
-                <button
-                  onClick={() => setGameActive(!gameActive)}
-                  className={cn(
-                    "relative inline-flex h-4.5 w-8.5 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-150 ease-in-out focus:outline-none",
-                    gameActive ? "bg-[#915EFF]" : "bg-[#202038]"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition duration-150 ease-in-out",
-                      gameActive ? "translate-x-4" : "translate-x-0"
-                    )}
+            <div className="flex items-center gap-1.5 text-[10px] text-gray-500 tracking-wider uppercase font-semibold">
+              <span>Less</span>
+              {([0, 1, 2, 3, 4] as ContributionLevel[]).map((level) => (
+                <svg key={level} width={cellSize} height={cellSize}>
+                  <rect
+                    width={cellSize}
+                    height={cellSize}
+                    rx={cellRx}
+                    fill={ACTIVE_THEME[`level${level}`]}
                   />
-                </button>
-              </div>
+                </svg>
+              ))}
+              <span>More</span>
             </div>
           )}
 
           {/* Aggregate metrics line */}
           {showStats && (
-            <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-gray-500 font-sans tracking-wide">
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-gray-500 font-sans tracking-wide">
               <span>ACTIVE DAYS: <strong className="text-white font-bold">{aggregateStats.activeDays}</strong></span>
               <span>•</span>
               <span>XP RECORD: <strong className="text-yellow-500 font-bold">+{aggregateStats.totalXp} XP</strong></span>
