@@ -139,3 +139,63 @@ export async function updateUserProfile(req, res) {
     res.status(500).json({ error: { message: 'Failed to update profile.' } });
   }
 }
+
+export async function getUserCalendarActivity(req, res) {
+  const userId = req.principal.userId;
+
+  try {
+    const oneYearAgo = new Date();
+    oneYearAgo.setDate(oneYearAgo.getDate() - 365);
+
+    const activityList = await db('quiz_attempts')
+      .where({ user_id: userId, status: 'submitted' })
+      .andWhere('submitted_at', '>=', oneYearAgo.toISOString())
+      .select(
+        db.raw('CAST(submitted_at AS DATE) as "activityDate"'),
+        db.raw('sum(xp_earned) as "totalXp"'),
+        db.raw('count(id) as "quizzesCompleted"'),
+        db.raw('sum(total_score) as "questionsSolved"'),
+        db.raw('sum(time_taken_seconds) as "studyTimeSeconds"')
+      )
+      .groupByRaw('CAST(submitted_at AS DATE)');
+
+    const activityData = {};
+    activityList.forEach((item) => {
+      // Clean date string to YYYY-MM-DD
+      const rawDate = item.activityDate;
+      let dateStr = '';
+      if (rawDate instanceof Date) {
+        dateStr = rawDate.toISOString().split('T')[0];
+      } else {
+        dateStr = String(rawDate).split('T')[0];
+      }
+      
+      const xp = parseInt(item.totalXp || 0);
+      const quizzes = parseInt(item.quizzesCompleted || 0);
+      const questions = parseInt(item.questionsSolved || 0);
+      const studyTime = Math.ceil(parseInt(item.studyTimeSeconds || 0) / 60);
+
+      // Map level 0-4 based on XP
+      let level = 0;
+      if (xp > 0) {
+        if (xp <= 50) level = 1;
+        else if (xp <= 150) level = 2;
+        else if (xp <= 300) level = 3;
+        else level = 4;
+      }
+
+      activityData[dateStr] = {
+        level,
+        xpEarned: xp,
+        quizzesCompleted: quizzes,
+        questionsSolved: questions,
+        studyTimeMinutes: studyTime
+      };
+    });
+
+    res.json(activityData);
+  } catch (err) {
+    console.error('Error fetching calendar activity:', err);
+    res.status(500).json({ error: { message: 'Internal server error' } });
+  }
+}

@@ -255,21 +255,35 @@ const DashboardHome = () => {
           whileHover={{ y: -1 }}
           className={`${styles.card} md:col-span-2 space-y-4 overflow-hidden`}
         >
-          <div className="flex justify-between items-center border-b border-[#2a2a40] pb-2.5">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-green-400">Learning Velocity (GitHub Synergy)</h4>
-            <span className="text-[10px] text-gray-500 font-mono">Space Shooter Calendar</span>
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-[#2a2a40]/60 pb-3">
+            <div>
+              <h4 className="text-sm font-black text-white">Learning Activity</h4>
+              <p className="text-[10px] text-gray-500 mt-0.5">Track your daily learning consistency throughout the year.</p>
+            </div>
+            
+            <div className="flex items-center gap-4 text-[10px] select-none text-right shrink-0">
+              <div className="hidden sm:block">
+                <span className="text-gray-500 block uppercase font-bold tracking-wider">Current Streak</span>
+                <span className="text-orange-400 font-extrabold">{profile.currentStreak} Days</span>
+              </div>
+              <div className="hidden sm:block border-l border-[#2a2a40]/60 pl-4">
+                <span className="text-gray-500 block uppercase font-bold tracking-wider">Longest Streak</span>
+                <span className="text-yellow-500 font-extrabold">{profile.longestStreak} Days</span>
+              </div>
+              <div className="border-l border-[#2a2a40]/60 pl-4">
+                <span className="text-gray-500 block uppercase font-bold tracking-wider">Level / XP</span>
+                <span className="text-[#915EFF] font-extrabold">Lvl {profile.currentLevel} ({profile.totalXp} XP)</span>
+              </div>
+            </div>
           </div>
 
           <div className="w-full overflow-x-auto no-scrollbar py-1">
             <GithubCalendar 
-              username="Jahirul077" 
               cellSize={9} 
               cellGap={3} 
-              startsOnSunday={true} 
               showMonthLabels={true} 
               showStats={true} 
               showLegend={true} 
-              theme="github"
               className="border-none bg-transparent"
             />
           </div>

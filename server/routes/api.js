@@ -47,6 +47,7 @@ router.get('/auth/me', authenticate, auth.me);
 // ==========================================
 router.get('/dashboard', authenticate, requireUser, user.getUserDashboard);
 router.put('/users/profile', authenticate, requireUser, user.updateUserProfile);
+router.get('/users/calendar-activity', authenticate, requireUser, user.getUserCalendarActivity);
 
 // ==========================================
 // CATALOG ROUTES

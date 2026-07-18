@@ -7,12 +7,17 @@ import { cn } from "@/lib/utils";
 
 export type ContributionLevel = 0 | 1 | 2 | 3 | 4;
 
+export type DayActivity = {
+  level: ContributionLevel;
+  xpEarned?: number;
+  quizzesCompleted?: number;
+  questionsSolved?: number;
+  studyTimeMinutes?: number;
+  label?: string;
+};
+
 export type ContributionData = {
-  [date: string]: {
-    level: ContributionLevel;
-    label?: string;
-    count?: number;
-  };
+  [date: string]: DayActivity;
 };
 
 export type ThemeColors = {
@@ -26,41 +31,25 @@ export type ThemeColors = {
 export type CellShape = "rounded" | "circle";
 
 export type GithubCalendarProps = {
-  username?: string; // GitHub username
-  data?: ContributionData; //Optional - Only for manual data
-  startDate?: string;
-  endDate?: string;
-  startsOnSunday?: boolean; //Want to start weeks on Sunday or not ?
+  profile?: any; // Auth profile containing streaks
+  stats?: any;   // Overview aggregate stats
   cellSize?: number;
   cellGap?: number;
-  cellShape?: CellShape; //Rounded | Circle
-  theme?: "github" | ThemeColors;
-  showMonthLabels?: boolean; // Want the month labels on top
+  cellShape?: CellShape;
+  showMonthLabels?: boolean;
   showStats?: boolean;
   showLegend?: boolean;
-  className?: string; // Custom class for custom styling
+  className?: string;
 };
 
-// ─── Built-in themes ──────────────────────────────────────────────────────────
+// ─── QuizArena Theme Palette ─────────────────────────────────────────────────
 
-const THEMES: Record<string, ThemeColors> = {
-  github: {
-    level0: "#ffffff",
-    level1: "#0e4429",
-    level2: "#006d32",
-    level3: "#26a641",
-    level4: "#39d353",
-  },
-};
-
-const DARK_THEMES: Record<string, ThemeColors> = {
-  github: {
-    level0: "#0a0a0a",
-    level1: "#0e4429",
-    level2: "#006d32",
-    level3: "#26a641",
-    level4: "#39d353",
-  },
+const ACTIVE_THEME: ThemeColors = {
+  level0: "#18182b",
+  level1: "rgba(145, 94, 255, 0.15)",
+  level2: "rgba(145, 94, 255, 0.40)",
+  level3: "rgba(145, 94, 255, 0.70)",
+  level4: "#915EFF",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -87,46 +76,22 @@ function addDays(date: Date, days: number): Date {
 }
 
 const MONTH_NAMES = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ];
 
 const FULL_MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
 ];
 
 function getOrdinalSuffix(day: number): string {
   if (day > 3 && day < 21) return "th";
   switch (day % 10) {
-    case 1:
-      return "st";
-    case 2:
-      return "nd";
-    case 3:
-      return "rd";
-    default:
-      return "th";
+    case 1: return "st";
+    case 2: return "nd";
+    case 3: return "rd";
+    default: return "th";
   }
 }
 
@@ -136,42 +101,10 @@ function formatTooltipDate(dateStr: string): string {
     const month = FULL_MONTH_NAMES[date.getMonth()];
     const day = date.getDate();
     const suffix = getOrdinalSuffix(day);
-    return `${month} ${day}${suffix}`;
+    return `${month} ${day}${suffix}, ${date.getFullYear()}`;
   } catch (e) {
     return dateStr;
   }
-}
-
-function playSound(type: "laser" | "explosion" | "hit" | "victory") {
-  // Sound effects disabled
-}
-
-// ─── API fetch ────────────────────────────────────────────────────────────────
-
-type APIResponse = {
-  total: Record<string, number>;
-  contributions: { date: string; count: number; level: number }[];
-};
-
-async function fetchContributions(username: string): Promise<ContributionData> {
-  const res = await fetch(
-    `https://github-contributions-api.jogruber.de/v4/${username}`,
-  );
-  if (!res.ok) {
-    throw new Error(
-      `Could not fetch contributions for "${username}" (${res.status})`,
-    );
-  }
-  const json: APIResponse = await res.json();
-
-  const result: ContributionData = {};
-  for (const entry of json.contributions) {
-    result[entry.date] = {
-      level: Math.min(4, Math.max(0, entry.level)) as ContributionLevel,
-      count: entry.count,
-    };
-  }
-  return result;
 }
 
 // ─── Build calendar grid ──────────────────────────────────────────────────────
@@ -244,8 +177,7 @@ function buildGrid(
 type TooltipState = {
   visible: boolean;
   date: string;
-  count: number | undefined;
-  label: string | undefined;
+  data: DayActivity | null;
   x: number;
   y: number;
 };
@@ -253,7 +185,7 @@ type TooltipState = {
 // ─── Loading Skeleton ─────────────────────────────────────────────────────────
 
 function CalendarSkeleton({
-  cellSize = 12,
+  cellSize = 9,
   cellGap = 3,
   className,
 }: {
@@ -265,28 +197,27 @@ function CalendarSkeleton({
   const weeks = 53;
   const days = 7;
   return (
-    <div className={cn("w-fit mx-auto space-y-3 animate-pulse", className)}>
-      <div className="flex gap-6">
+    <div className={cn("w-full space-y-4 animate-pulse", className)}>
+      <div className="flex justify-between items-center">
+        <div className="h-4 w-40 rounded bg-muted" />
         <div className="h-4 w-32 rounded bg-muted" />
-        <div className="h-4 w-20 rounded bg-muted" />
-        <div className="h-4 w-24 rounded bg-muted" />
       </div>
       <div className="overflow-x-auto">
         <svg
-          width={weeks * step - cellGap}
-          height={16 + days * step - cellGap}
+          width={32 + weeks * step - cellGap}
+          height={20 + days * step - cellGap}
           className="overflow-visible"
         >
           {Array.from({ length: weeks }).map((_, wi) =>
             Array.from({ length: days }).map((_, di) => (
               <rect
                 key={`${wi}-${di}`}
-                x={wi * step}
-                y={16 + di * step}
+                x={32 + wi * step}
+                y={20 + di * step}
                 width={cellSize}
                 height={cellSize}
                 rx={cellSize * 0.2}
-                className="fill-muted"
+                className="fill-[#202038]/50"
               />
             )),
           )}
@@ -299,147 +230,96 @@ function CalendarSkeleton({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export const GithubCalendar = memo(function GithubCalendar({
-  username,
-  data: dataProp,
-  startDate,
-  endDate,
-  startsOnSunday = true,
-  cellSize = 12,
+  profile,
+  stats: userStats,
+  cellSize = 9,
   cellGap = 3,
   cellShape = "rounded",
-  theme = "github",
   showMonthLabels = true,
   showStats = true,
   showLegend = true,
   className,
 }: GithubCalendarProps) {
   const id = useId();
-  // Scroll ref — used to auto-scroll to most recent months on compact viewports
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isDark, setIsDark] = useState(false);
   const [gameActive, setGameActive] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
-    const checkDark = () => {
-      setIsDark(
-        document.documentElement.classList.contains("dark") ||
-          document.body.classList.contains("dark"),
-      );
-    };
-
-    checkDark();
-
-    const observer = new MutationObserver(checkDark);
-    const opts = { attributes: true, attributeFilter: ["class"] };
-    observer.observe(document.documentElement, opts);
-    observer.observe(document.body, opts);
-
-    return () => observer.disconnect();
-  }, []);
-
   // ── Fetch state ────────────────────────────────────────────────────────
-  const [fetchedData, setFetchedData] = useState<ContributionData | null>(null);
-  const [loading, setLoading] = useState(!!username);
+  const [activityData, setActivityData] = useState<ContributionData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!username) return;
-    setFetchedData(null);
-    setFetchError(null);
     setLoading(true);
+    setFetchError(null);
 
-    fetchContributions(username)
-      .then((d) => setFetchedData(d))
+    fetch("/api/users/calendar-activity")
+      .then((res) => {
+        if (!res.ok) throw new Error("Could not fetch learning activity.");
+        return res.json();
+      })
+      .then((d) => {
+        setActivityData(d);
+      })
       .catch((e) => setFetchError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
-  }, [username]);
-
-  // ── Choose data source ─────────────────────────────────────────────────
-  const data: ContributionData = dataProp ?? fetchedData ?? {};
+  }, []);
 
   // ── Resolve dates ──────────────────────────────────────────────────────
-  const resolvedEnd = endDate ?? formatDate(new Date());
+  const resolvedEnd = formatDate(new Date());
   const resolvedStart = useMemo(() => {
-    if (startDate) return startDate;
-    const d = parseDate(resolvedEnd);
+    const d = new Date();
     d.setFullYear(d.getFullYear() - 1);
     d.setDate(d.getDate() + 1);
     return formatDate(d);
-  }, [startDate, resolvedEnd]);
-
-  // ── Resolve theme colors ───────────────────────────────────────────────
-  const activeColors = useMemo(() => {
-    if (typeof theme === "object") return theme;
-    return isDark ? DARK_THEMES.github : THEMES.github;
-  }, [theme, isDark]);
+  }, []);
 
   // ── Tooltip state ──────────────────────────────────────────────────────
   const [tooltip, setTooltip] = useState<TooltipState>({
     visible: false,
     date: "",
-    count: undefined,
-    label: undefined,
+    data: null,
     x: 0,
     y: 0,
   });
 
   // ── Build grid ─────────────────────────────────────────────────────────
   const { weeks, monthLabels, gridStart } = useMemo(
-    () => buildGrid(resolvedStart, resolvedEnd, startsOnSunday),
-    [resolvedStart, resolvedEnd, startsOnSunday],
+    () => buildGrid(resolvedStart, resolvedEnd, true),
+    [resolvedStart, resolvedEnd],
   );
 
-  // ── Stats ──────────────────────────────────────────────────────────────
-  const stats = useMemo(() => {
-    const entries = Object.entries(data);
-    const total = entries.reduce(
-      (sum, [, v]) => sum + (v.count ?? (v.level > 0 ? 1 : 0)),
-      0,
-    );
-    const activeDays = entries.filter(([, v]) => v.level > 0).length;
-    const maxStreak = (() => {
-      let max = 0;
-      let cur = 0;
-      const sorted = entries
-        .filter(([, v]) => v.level > 0)
-        .map(([d]) => d)
-        .sort();
-      for (let i = 0; i < sorted.length; i++) {
-        if (i === 0) {
-          cur = 1;
-          max = 1;
-          continue;
-        }
-        const prev = parseDate(sorted[i - 1]!);
-        const curr = parseDate(sorted[i]!);
-        const diff = (curr.getTime() - prev.getTime()) / 86400000;
-        if (diff === 1) {
-          cur++;
-          max = Math.max(max, cur);
-        } else cur = 1;
-      }
-      return max;
-    })();
-    return { total, activeDays, maxStreak };
-  }, [data]);
+  // ── Stats Summation ─────────────────────────────────────────────────────
+  const aggregateStats = useMemo(() => {
+    if (!activityData) return { totalQuestions: 0, totalQuizzes: 0, totalXp: 0, activeDays: 0, studyHours: 0 };
+    const entries = Object.values(activityData);
+    const totalQuestions = entries.reduce((sum, v) => sum + (v.questionsSolved || 0), 0);
+    const totalQuizzes = entries.reduce((sum, v) => sum + (v.quizzesCompleted || 0), 0);
+    const totalXp = entries.reduce((sum, v) => sum + (v.xpEarned || 0), 0);
+    const activeDays = entries.filter((v) => v.level > 0).length;
+    const studyHours = Math.ceil(entries.reduce((sum, v) => sum + (v.studyTimeMinutes || 0), 0) / 60);
+
+    return { totalQuestions, totalQuizzes, totalXp, activeDays, studyHours };
+  }, [activityData]);
 
   // ── Dimensions ────────────────────────────────────────────────────────
   const step = cellSize + cellGap;
+  const gridOffsetX = 32; // Offset for Mon/Wed/Fri labels on left
   const monthLabelHeight = showMonthLabels && !gameActive ? 20 : 0;
-  const svgWidth = weeks.length * step - cellGap;
+  const svgWidth = gridOffsetX + weeks.length * step - cellGap;
   const svgHeight = monthLabelHeight + 7 * step - cellGap;
-  // Auto-scroll to the right end (most recent months) — must be before early returns
+
+  // Auto-scroll to the right end (most recent months)
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
     }
-  }, [fetchedData, dataProp]);
+  }, [activityData]);
 
-  // Game loop and autoplay logic
+  // Game loop and autoplay logic (styled for QuizArena brand)
   useEffect(() => {
-    if (!gameActive) {
-      // Restore all cells opacity and colors when game is stopped
+    if (!gameActive || !activityData) {
       weeks.forEach((week) => {
         week.forEach((date) => {
           if (!date) return;
@@ -447,10 +327,10 @@ export const GithubCalendar = memo(function GithubCalendar({
           if (rect) {
             rect.style.opacity = "1";
             rect.style.pointerEvents = "auto";
-            const originalLevel = data[date]?.level ?? 0;
+            const originalLevel = activityData?.[date]?.level ?? 0;
             const originalColor =
-              activeColors[`level${originalLevel}` as keyof ThemeColors] ||
-              activeColors.level0;
+              ACTIVE_THEME[`level${originalLevel}` as keyof ThemeColors] ||
+              ACTIVE_THEME.level0;
             rect.setAttribute("fill", originalColor);
           }
         });
@@ -469,12 +349,11 @@ export const GithubCalendar = memo(function GithubCalendar({
     canvas.width = width;
     canvas.height = height;
 
-    // Local mutable map for dynamic cell levels
     const cellLevels = new Map<string, number>();
     weeks.forEach((week) => {
       week.forEach((date) => {
         if (!date) return;
-        const entry = data[date];
+        const entry = activityData[date];
         const initialLevel = entry?.level ?? 0;
         cellLevels.set(date, initialLevel);
         const rect = document.getElementById(`cell-${id}-${date}`);
@@ -490,7 +369,6 @@ export const GithubCalendar = memo(function GithubCalendar({
       });
     });
 
-    // Player (Spacecraft) with automatic direction sweep
     const player = {
       x: width / 2 - 15,
       y: height - 25,
@@ -498,10 +376,9 @@ export const GithubCalendar = memo(function GithubCalendar({
       height: 20,
       speed: 4,
       direction: 1, // 1 = right, -1 = left
-      color: "#38bdf8",
+      color: "#915EFF", // Brand accent purple
     };
 
-    // Bullets
     type GameBullet = {
       x: number;
       y: number;
@@ -512,7 +389,7 @@ export const GithubCalendar = memo(function GithubCalendar({
     };
     let bullets: GameBullet[] = [];
     let lastShot = 0;
-    const cooldown = 140; // Autoplay shooting speed
+    const cooldown = 140;
 
     const shoot = () => {
       bullets.push({
@@ -521,13 +398,11 @@ export const GithubCalendar = memo(function GithubCalendar({
         vy: -6,
         width: 3,
         height: 8,
-        color: "#fbbf24", // Yellow laser
+        color: "#cbd5e1", // White/silver laser
       });
-      playSound("laser");
     };
 
-    // Stars background (Space effect)
-    const stars = Array.from({ length: 140 }).map(() => ({
+    const stars = Array.from({ length: 100 }).map(() => ({
       x: Math.random() * width,
       y: Math.random() * height,
       speed: Math.random() * 0.4 + 0.1,
@@ -535,7 +410,6 @@ export const GithubCalendar = memo(function GithubCalendar({
       alpha: Math.random() * 0.5 + 0.1,
     }));
 
-    // Particles (for explosions)
     type GameParticle = {
       x: number;
       y: number;
@@ -549,8 +423,7 @@ export const GithubCalendar = memo(function GithubCalendar({
     };
     let particles: GameParticle[] = [];
     const explode = (x: number, y: number, color: string) => {
-      playSound("explosion");
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < 10; i++) {
         const angle = Math.random() * Math.PI * 2;
         const speed = Math.random() * 2.5 + 1.2;
         particles.push({
@@ -568,7 +441,6 @@ export const GithubCalendar = memo(function GithubCalendar({
     };
 
     const update = () => {
-      // Find the min and max column index (wi) that still has active cells (level > 0)
       let minWi = -1;
       let maxWi = -1;
       weeks.forEach((week, wi) => {
@@ -582,21 +454,17 @@ export const GithubCalendar = memo(function GithubCalendar({
         });
       });
 
-      // If there are active cells, restrict player boundary
-      let minX = 0;
+      let minX = gridOffsetX;
       let maxX = width - player.width;
       if (minWi !== -1 && maxWi !== -1) {
-        minX = minWi * step;
+        minX = gridOffsetX + minWi * step;
         maxX = Math.max(
           minX,
-          Math.min(width - player.width, (maxWi + 1) * step - player.width),
+          Math.min(width - player.width, gridOffsetX + (maxWi + 1) * step - player.width),
         );
       }
 
-      // Clamp player position
       player.x = Math.max(minX, Math.min(maxX, player.x));
-
-      // ── Side-to-Side Sweep Ship Movement ──────────────────────────────────
       player.x += player.speed * player.direction;
       if (player.x >= maxX) {
         player.x = maxX;
@@ -606,32 +474,28 @@ export const GithubCalendar = memo(function GithubCalendar({
         player.direction = 1;
       }
 
-      // ── Continuous Auto-Shooting ──────────────────────────────────────────
       const now = Date.now();
       if (now - lastShot >= cooldown) {
         shoot();
         lastShot = now;
       }
 
-      // ── Reset Game if all contribution cells are cleared to level 0 ──────
       let anyActive = false;
       cellLevels.forEach((level) => {
         if (level > 0) anyActive = true;
       });
 
       if (!anyActive) {
-        playSound("victory");
-        // Reset all cell levels back to their original levels
         weeks.forEach((week) => {
           week.forEach((date) => {
             if (!date) return;
-            const originalLevel = data[date]?.level ?? 0;
+            const originalLevel = activityData[date]?.level ?? 0;
             cellLevels.set(date, originalLevel);
             const rect = document.getElementById(`cell-${id}-${date}`);
             if (rect) {
               const originalColor =
-                activeColors[`level${originalLevel}` as keyof ThemeColors] ||
-                activeColors.level0;
+                ACTIVE_THEME[`level${originalLevel}` as keyof ThemeColors] ||
+                ACTIVE_THEME.level0;
               rect.setAttribute("fill", originalColor);
               if (originalLevel === 0) {
                 rect.style.opacity = "0";
@@ -645,8 +509,6 @@ export const GithubCalendar = memo(function GithubCalendar({
         });
       }
 
-      // ── Update Environment ────────────────────────────────────────────────
-      // Move Stars
       stars.forEach((s) => {
         s.y += s.speed;
         if (s.y > height) {
@@ -655,14 +517,12 @@ export const GithubCalendar = memo(function GithubCalendar({
         }
       });
 
-      // Move Bullets
       bullets = bullets.filter((b) => {
         b.y += b.vy;
         return b.y > 0;
       });
 
-      // Move Particles
-      particles.forEach((p, idx) => {
+      particles.forEach((p) => {
         p.x += p.vx;
         p.y += p.vy;
         p.life++;
@@ -670,33 +530,28 @@ export const GithubCalendar = memo(function GithubCalendar({
       });
       particles = particles.filter((p) => p.life < p.maxLife);
 
-      // Check laser collisions with cells
       bullets.forEach((bullet, bulletIdx) => {
         weeks.forEach((week, wi) => {
           week.forEach((date, di) => {
             if (!date) return;
 
             const currentLevel = cellLevels.get(date) ?? 0;
-            if (currentLevel === 0) return; // Already finished / level 0
+            if (currentLevel === 0) return;
 
-            const cellX = wi * step;
+            const cellX = gridOffsetX + wi * step;
             const cellY = monthLabelHeight + di * step;
 
-            // Simple box-overlap collision check
             if (
               bullet.x < cellX + cellSize &&
               bullet.x + bullet.width > cellX &&
               bullet.y < cellY + cellSize &&
               bullet.y + bullet.height > cellY
             ) {
-              // Collision detected! Remove the bullet
               bullets.splice(bulletIdx, 1);
 
-              // Decrement the level by 1
               const newLevel = currentLevel - 1;
               cellLevels.set(date, newLevel);
 
-              // Instantly update the cell color in the SVG DOM
               const rect = document.getElementById(`cell-${id}-${date}`);
               if (rect) {
                 if (newLevel === 0) {
@@ -704,16 +559,15 @@ export const GithubCalendar = memo(function GithubCalendar({
                   rect.style.pointerEvents = "none";
                 } else {
                   const newColor =
-                    activeColors[`level${newLevel}` as keyof ThemeColors] ||
-                    activeColors.level0;
+                    ACTIVE_THEME[`level${newLevel}` as keyof ThemeColors] ||
+                    ACTIVE_THEME.level0;
                   rect.setAttribute("fill", newColor);
                 }
               }
 
-              // Play hit explosion effect using the level color before hit
               const hitColor =
-                activeColors[`level${currentLevel}` as keyof ThemeColors] ||
-                activeColors.level0;
+                ACTIVE_THEME[`level${currentLevel}` as keyof ThemeColors] ||
+                ACTIVE_THEME.level0;
               explode(cellX + cellSize / 2, cellY + cellSize / 2, hitColor);
             }
           });
@@ -724,7 +578,6 @@ export const GithubCalendar = memo(function GithubCalendar({
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // Draw starry space background
       ctx.fillStyle = "#ffffff";
       stars.forEach((s) => {
         ctx.globalAlpha = s.alpha;
@@ -732,13 +585,11 @@ export const GithubCalendar = memo(function GithubCalendar({
       });
       ctx.globalAlpha = 1.0;
 
-      // Draw bullets
       bullets.forEach((b) => {
         ctx.fillStyle = b.color;
         ctx.fillRect(b.x, b.y, b.width, b.height);
       });
 
-      // Draw particles
       particles.forEach((p) => {
         ctx.fillStyle = p.color;
         ctx.globalAlpha = p.alpha;
@@ -746,21 +597,14 @@ export const GithubCalendar = memo(function GithubCalendar({
       });
       ctx.globalAlpha = 1.0;
 
-      // Draw Player Ship (Cyan space fighter style)
       ctx.fillStyle = player.color;
       ctx.shadowColor = player.color;
       ctx.shadowBlur = 6;
       ctx.beginPath();
       ctx.moveTo(player.x + player.width / 2, player.y);
       ctx.lineTo(player.x + player.width, player.y + player.height);
-      ctx.lineTo(
-        player.x + player.width * 0.7,
-        player.y + player.height * 0.75,
-      );
-      ctx.lineTo(
-        player.x + player.width * 0.3,
-        player.y + player.height * 0.75,
-      );
+      ctx.lineTo(player.x + player.width * 0.7, player.y + player.height * 0.75);
+      ctx.lineTo(player.x + player.width * 0.3, player.y + player.height * 0.75);
       ctx.lineTo(player.x, player.y + player.height);
       ctx.closePath();
       ctx.fill();
@@ -780,80 +624,33 @@ export const GithubCalendar = memo(function GithubCalendar({
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [
-    gameActive,
-    data,
-    weeks,
-    step,
-    cellSize,
-    cellGap,
-    monthLabelHeight,
-    activeColors,
-    id,
-  ]);
+  }, [gameActive, activityData, weeks, step, cellSize, cellGap, monthLabelHeight, id]);
 
   // ── Loading / error states ───────────────────────────
   if (loading) {
-    return (
-      <CalendarSkeleton
-        cellSize={cellSize}
-        cellGap={cellGap}
-        className={className}
-      />
-    );
+    return <CalendarSkeleton cellSize={cellSize} cellGap={cellGap} className={className} />;
   }
 
-  if (fetchError) {
+  if (fetchError || !activityData) {
     return (
-      <div
-        className={cn(
-          "w-fit mx-auto flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive",
-          className,
-        )}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="12" />
-          <line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
-        {fetchError}
+      <div className={cn("w-full p-6 text-center text-xs text-red-400 border border-red-500/25 bg-red-500/5 rounded-xl", className)}>
+        <AlertTriangle className="w-5 h-5 mx-auto mb-2 text-red-500" />
+        <p>Failed to load learning consistency records.</p>
       </div>
     );
   }
 
-  const cellRx = cellShape === "circle" ? cellSize / 2 : cellSize * 0.2;
+  const cellRx = cellShape === "circle" ? cellSize / 2 : 2.5;
 
   return (
-    <div
-      className={cn(
-        "w-fit mx-auto overflow-x-hidden border rounded-sm transition-all duration-500",
-        gameActive ? "bg-black border-neutral-800" : "",
-        className,
-      )}
-    >
-      <div className="w-fit mx-auto max-w-full flex flex-col gap-3 p-3">
+    <div className={cn("w-full transition-all duration-300 relative", gameActive ? "bg-black/90 p-4 rounded-2xl border border-neutral-800" : "", className)}>
+      
+      {/* Dynamic Month Labels Column Grid */}
+      <div className="w-full">
         <div
           ref={scrollRef}
-          className={cn(
-            "relative overflow-x-auto transition-all duration-500",
-            gameActive ? "pb-[80px]" : "",
-          )}
-          style={
-            {
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
-            } as React.CSSProperties
-          }
+          className={cn("relative overflow-x-auto no-scrollbar transition-all duration-300", gameActive ? "pb-[80px]" : "")}
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           <svg
             width={svgWidth}
@@ -861,56 +658,55 @@ export const GithubCalendar = memo(function GithubCalendar({
             viewBox={`0 0 ${svgWidth} ${svgHeight}`}
             className="overflow-visible"
           >
-            {/* month labels */}
-            {showMonthLabels &&
-              !gameActive &&
+            {/* Weekday indicator labels (Mon, Wed, Fri) */}
+            {showMonthLabels && !gameActive && (
+              <>
+                <text x={0} y={monthLabelHeight + 1 * step + cellSize/2 + 3.5} fontSize={10} fill="#6b7280" className="font-semibold select-none">Mon</text>
+                <text x={0} y={monthLabelHeight + 3 * step + cellSize/2 + 3.5} fontSize={10} fill="#6b7280" className="font-semibold select-none">Wed</text>
+                <text x={0} y={monthLabelHeight + 5 * step + cellSize/2 + 3.5} fontSize={10} fill="#6b7280" className="font-semibold select-none">Fri</text>
+              </>
+            )}
+
+            {/* Month labels on top */}
+            {showMonthLabels && !gameActive &&
               (() => {
                 const byWeek = new Map<number, string>();
-                monthLabels.forEach(({ label, weekIndex }) =>
-                  byWeek.set(weekIndex, label),
-                );
+                monthLabels.forEach(({ label, weekIndex }) => byWeek.set(weekIndex, label));
                 const entries = Array.from(byWeek.entries());
                 const validEntries: [number, string][] = [];
                 for (let i = 0; i < entries.length; i++) {
                   const current = entries[i]!;
                   const next = entries[i + 1];
-                  // If the first month is too close to the second, skip the first one
-                  if (i === 0 && next && next[0] - current[0] < 3) {
-                    continue;
-                  }
-                  // If this month is too close to the last added one, skip it
+                  if (i === 0 && next && next[0] - current[0] < 3) continue;
                   const lastValid = validEntries[validEntries.length - 1];
-                  if (lastValid && current[0] - lastValid[0] < 3) {
-                    continue;
-                  }
+                  if (lastValid && current[0] - lastValid[0] < 3) continue;
                   validEntries.push(current);
                 }
                 return validEntries.map(([weekIndex, label]) => (
                   <text
                     key={`${label}-${weekIndex}`}
-                    x={weekIndex * step}
-                    y={10}
-                    fontSize={14}
-                    fill={isDark ? "#fafafa" : "#0a0a0a"}
-                    fontFamily="inherit"
+                    x={gridOffsetX + weekIndex * step}
+                    y={12}
+                    fontSize={10.5}
+                    fontWeight="600"
+                    fill="#a27eff"
+                    className="select-none"
                   >
                     {label}
                   </text>
                 ));
               })()}
 
-            {/* cells */}
+            {/* Grid squares */}
             {weeks.map((week, wi) =>
               week.map((date, di) => {
-                const entry = date ? data[date] : undefined;
+                const entry = date ? activityData[date] : undefined;
                 const level: ContributionLevel = entry?.level ?? 0;
-                const cellCenterX = wi * step + cellSize / 2;
+                const cellCenterX = gridOffsetX + wi * step + cellSize / 2;
                 const cellTopY = monthLabelHeight + di * step;
 
                 if (!date) {
-                  const cellDate = formatDate(
-                    addDays(parseDate(gridStart), wi * 7 + di),
-                  );
+                  const cellDate = formatDate(addDays(parseDate(gridStart), wi * 7 + di));
                   if (cellDate > resolvedEnd) return null;
                 }
 
@@ -918,42 +714,36 @@ export const GithubCalendar = memo(function GithubCalendar({
                   <rect
                     key={`${wi}-${di}`}
                     id={date ? `cell-${id}-${date}` : undefined}
-                    x={wi * step}
+                    x={gridOffsetX + wi * step}
                     y={cellTopY}
                     width={cellSize}
                     height={cellSize}
                     rx={cellRx}
-                    fill={activeColors[`level${level}` as keyof ThemeColors]}
+                    fill={ACTIVE_THEME[`level${level}` as keyof ThemeColors]}
                     style={{
-                      transition: "opacity 0.1s",
+                      transition: "opacity 0.1s, fill 0.2s",
                       opacity: gameActive ? (level === 0 || !date ? 0 : 1) : 1,
-                      pointerEvents: gameActive
-                        ? level === 0 || !date
-                          ? "none"
-                          : "auto"
-                        : "auto",
+                      pointerEvents: gameActive ? (level === 0 || !date ? "none" : "auto") : "auto",
+                      cursor: date ? "pointer" : "default"
                     }}
                     onMouseEnter={() => {
                       if (!date || gameActive) return;
                       setTooltip({
                         visible: true,
                         date,
-                        count: entry?.count,
-                        label: entry?.label,
+                        data: entry || { level: 0 },
                         x: cellCenterX,
                         y: cellTopY,
                       });
                     }}
-                    onMouseLeave={() =>
-                      setTooltip((t) => ({ ...t, visible: false }))
-                    }
+                    onMouseLeave={() => setTooltip((t) => ({ ...t, visible: false }))}
                   />
                 );
               }),
             )}
           </svg>
 
-          {/* Game canvas overlay */}
+          {/* Spaceship Game overlay canvas */}
           {gameActive && (
             <canvas
               ref={canvasRef}
@@ -962,38 +752,38 @@ export const GithubCalendar = memo(function GithubCalendar({
             />
           )}
 
-          {/* custom tooltip */}
-          {tooltip.visible &&
-            (() => {
-              const count = tooltip.count ?? 0;
-              const formattedDate = formatTooltipDate(tooltip.date);
-              const tooltipText = tooltip.label
-                ? `${tooltip.label} on ${formattedDate}.`
-                : count === 0
-                  ? `No contributions on ${formattedDate}.`
-                  : `${count} contribution${count !== 1 ? "s" : ""} on ${formattedDate}.`;
-
-              return (
-                <div
-                  className="pointer-events-none absolute z-50 rounded bg-[#24292e] dark:bg-[#161b22] px-2.5 py-1 text-[11px] font-medium text-white shadow-md border border-neutral-700/30 whitespace-nowrap"
-                  style={{
-                    left: tooltip.x,
-                    top: tooltip.y,
-                    transform: "translate(-50%, calc(-100% - 6px))",
-                  }}
-                >
-                  {tooltipText}
-                  {/* Small arrow pointing down */}
-                  <div className="absolute left-1/2 bottom-0 -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-[#24292e] dark:bg-[#161b22] border-r border-b border-neutral-700/30" />
-                </div>
-              );
-            })()}
+          {/* Floating Tooltip details */}
+          {tooltip.visible && tooltip.data && (
+            <div
+              className="pointer-events-none absolute z-50 rounded-xl bg-[#131326] border border-[#2a2a40] p-3.5 text-xs text-white shadow-2xl whitespace-nowrap space-y-1.5 min-w-[150px]"
+              style={{
+                left: tooltip.x,
+                top: tooltip.y,
+                transform: "translate(-50%, calc(-100% - 12px))",
+              }}
+            >
+              <p className="font-bold text-gray-200 border-b border-[#2a2a40]/60 pb-1 text-[11px] font-sans">
+                {formatTooltipDate(tooltip.date)}
+              </p>
+              <div className="space-y-0.5 text-[10px] text-gray-400 font-sans">
+                <p>Questions Solved: <span className="text-white font-bold">{tooltip.data.questionsSolved ?? 0}</span></p>
+                <p>Quizzes Completed: <span className="text-white font-bold">{tooltip.data.quizzesCompleted ?? 0}</span></p>
+                <p>XP Earned: <span className="text-yellow-500 font-bold">+{tooltip.data.xpEarned ?? 0} XP</span></p>
+                <p>Study Duration: <span className="text-white font-bold">{tooltip.data.studyTimeMinutes ?? 0} min</span></p>
+                <p>Daily Streak: <span className={tooltip.data.level > 0 ? "text-orange-400 font-bold" : "text-gray-500"}>
+                  {tooltip.data.level > 0 ? "Active" : "Inactive"}
+                </span></p>
+              </div>
+              <div className="absolute left-1/2 bottom-0 -translate-x-1/2 translate-y-1/2 w-2 h-2 rotate-45 bg-[#131326] border-r border-b border-[#2a2a40]" />
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center justify-between gap-x-4">
-          {/* legend (left) */}
+        {/* Legend panel and game switcher */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-3 border-t border-[#2a2a40]/30 pt-3">
+          {/* Legend indicator */}
           {showLegend && (
-            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground shrink-0 mt-0.5">
+            <div className="flex items-center gap-4 text-[10px] text-gray-500 tracking-wider uppercase font-semibold">
               <div className="flex items-center gap-1.5">
                 <span>Less</span>
                 {([0, 1, 2, 3, 4] as ContributionLevel[]).map((level) => (
@@ -1002,26 +792,26 @@ export const GithubCalendar = memo(function GithubCalendar({
                       width={cellSize}
                       height={cellSize}
                       rx={cellRx}
-                      fill={activeColors[`level${level}`]}
+                      fill={ACTIVE_THEME[`level${level}`]}
                     />
                   </svg>
                 ))}
                 <span>More</span>
               </div>
 
-              {/* Game Mode Switch */}
-              <div className="flex items-center gap-2 border-l border-neutral-800 pl-4">
-                <span className="text-[11px] text-neutral-400 select-none">Game Mode</span>
+              {/* Game Mode switch trigger */}
+              <div className="flex items-center gap-2 border-l border-[#2a2a40]/70 pl-4">
+                <span className="text-[10px] text-gray-400 select-none uppercase font-bold">Game Mode</span>
                 <button
                   onClick={() => setGameActive(!gameActive)}
                   className={cn(
-                    "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-                    gameActive ? "bg-emerald-500" : "bg-neutral-800"
+                    "relative inline-flex h-4.5 w-8.5 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-150 ease-in-out focus:outline-none",
+                    gameActive ? "bg-[#915EFF]" : "bg-[#202038]"
                   )}
                 >
                   <span
                     className={cn(
-                      "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                      "pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition duration-150 ease-in-out",
                       gameActive ? "translate-x-4" : "translate-x-0"
                     )}
                   />
@@ -1030,27 +820,16 @@ export const GithubCalendar = memo(function GithubCalendar({
             </div>
           )}
 
-          {/* stats line (right) */}
+          {/* Aggregate metrics line */}
           {showStats && (
-            <div className="flex flex-1 flex-wrap justify-end ml-auto text-sm font-sans tracking-wide">
-              <a
-                href={`https://github.com/${username}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-x-1 text-neutral-400 select-none"
-              >
-                <span className="font-semibold text-neutral-200">
-                  {username}
-                </span>
-                <span>contributed</span>
-                <span className="font-bold text-[#39d353]">
-                  {stats.total.toLocaleString()}
-                </span>
-                <span>this year on</span>
-                <span className="font-semibold text-neutral-200 underline decoration-neutral-400 underline-offset-4">
-                  GitHub
-                </span>
-              </a>
+            <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-gray-500 font-sans tracking-wide">
+              <span>ACTIVE DAYS: <strong className="text-white font-bold">{aggregateStats.activeDays}</strong></span>
+              <span>•</span>
+              <span>XP RECORD: <strong className="text-yellow-500 font-bold">+{aggregateStats.totalXp} XP</strong></span>
+              <span>•</span>
+              <span>QUESTIONS: <strong className="text-white font-bold">{aggregateStats.totalQuestions}</strong></span>
+              <span>•</span>
+              <span>STUDY TIME: <strong className="text-white font-bold">{aggregateStats.studyHours}h</strong></span>
             </div>
           )}
         </div>
@@ -1058,7 +837,5 @@ export const GithubCalendar = memo(function GithubCalendar({
     </div>
   );
 });
-
-GithubCalendar.displayName = "GithubCalendar";
 
 export default GithubCalendar;
