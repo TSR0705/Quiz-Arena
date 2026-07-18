@@ -1,8 +1,10 @@
 "use client";
 
 import { memo, useMemo, useState, useEffect, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { AlertTriangle } from "lucide-react";
+import { motion } from "framer-motion";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -389,7 +391,6 @@ export const GithubCalendar = memo(function GithubCalendar({
               week.map((date, di) => {
                 const entry = date ? activityData[date] : undefined;
                 const level: ContributionLevel = entry?.level ?? 0;
-                const cellCenterX = gridOffsetX + wi * step + cellSize / 2;
                 const cellTopY = monthLabelHeight + di * step;
 
                 if (!date) {
@@ -411,14 +412,15 @@ export const GithubCalendar = memo(function GithubCalendar({
                       transition: "opacity 0.1s, fill 0.2s",
                       cursor: date ? "pointer" : "default"
                     }}
-                    onMouseEnter={() => {
+                    onMouseEnter={(e) => {
                       if (!date) return;
+                      const rect = e.currentTarget.getBoundingClientRect();
                       setTooltip({
                         visible: true,
                         date,
                         data: entry || { level: 0 },
-                        x: cellCenterX,
-                        y: cellTopY,
+                        x: rect.left + rect.width / 2 + window.scrollX,
+                        y: rect.top + window.scrollY,
                       });
                     }}
                     onMouseLeave={() => setTooltip((t) => ({ ...t, visible: false }))}
@@ -427,33 +429,37 @@ export const GithubCalendar = memo(function GithubCalendar({
               }),
             )}
           </svg>
-
-          {/* Floating Tooltip details */}
-          {tooltip.visible && tooltip.data && (
-            <div
-              className="pointer-events-none absolute z-50 rounded-xl bg-[#131326] border border-[#2a2a40] p-3.5 text-xs text-white shadow-2xl whitespace-nowrap space-y-1.5 min-w-[150px]"
-              style={{
-                left: tooltip.x,
-                top: tooltip.y,
-                transform: "translate(-50%, calc(-100% - 12px))",
-              }}
-            >
-              <p className="font-bold text-gray-200 border-b border-[#2a2a40]/60 pb-1 text-[11px] font-sans">
-                {formatTooltipDate(tooltip.date)}
-              </p>
-              <div className="space-y-0.5 text-[10px] text-gray-400 font-sans">
-                <p>Questions Solved: <span className="text-white font-bold">{tooltip.data.questionsSolved ?? 0}</span></p>
-                <p>Quizzes Completed: <span className="text-white font-bold">{tooltip.data.quizzesCompleted ?? 0}</span></p>
-                <p>XP Earned: <span className="text-yellow-500 font-bold">+{tooltip.data.xpEarned ?? 0} XP</span></p>
-                <p>Study Duration: <span className="text-white font-bold">{tooltip.data.studyTimeMinutes ?? 0} min</span></p>
-                <p>Daily Streak: <span className={tooltip.data.level > 0 ? "text-orange-400 font-bold" : "text-gray-500"}>
-                  {tooltip.data.level > 0 ? "Active" : "Inactive"}
-                </span></p>
-              </div>
-              <div className="absolute left-1/2 bottom-0 -translate-x-1/2 translate-y-1/2 w-2 h-2 rotate-45 bg-[#131326] border-r border-b border-[#2a2a40]" />
-            </div>
-          )}
         </div>
+
+        {/* Floating Tooltip details - Rendered via React Portal to prevent overflow clipping */}
+        {tooltip.visible && tooltip.data && typeof document !== "undefined" && createPortal(
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className="pointer-events-none absolute z-[9999] rounded-xl bg-[#161630]/95 backdrop-blur-md border border-[#915EFF]/30 p-3.5 text-xs text-white shadow-[0_12px_24px_rgba(0,0,0,0.65)] whitespace-nowrap space-y-1.5 min-w-[155px]"
+            style={{
+              left: tooltip.x,
+              top: tooltip.y,
+              transform: "translate(-50%, calc(-100% - 14px))",
+            }}
+          >
+            <p className="font-bold text-gray-200 border-b border-[#2a2a40]/60 pb-1 text-[11px] font-sans">
+              {formatTooltipDate(tooltip.date)}
+            </p>
+            <div className="space-y-0.5 text-[10px] text-gray-400 font-sans">
+              <p>Questions Solved: <span className="text-white font-bold">{tooltip.data.questionsSolved ?? 0}</span></p>
+              <p>Quizzes Completed: <span className="text-white font-bold">{tooltip.data.quizzesCompleted ?? 0}</span></p>
+              <p>XP Earned: <span className="text-yellow-500 font-bold">+{tooltip.data.xpEarned ?? 0} XP</span></p>
+              <p>Study Duration: <span className="text-white font-bold">{tooltip.data.studyTimeMinutes ?? 0} min</span></p>
+              <p>Daily Streak: <span className={tooltip.data.level > 0 ? "text-orange-400 font-bold" : "text-gray-500"}>
+                {tooltip.data.level > 0 ? "Active" : "Inactive"}
+              </span></p>
+            </div>
+            {/* Small arrow pointing down */}
+            <div className="absolute left-1/2 bottom-0 -translate-x-1/2 translate-y-1/2 w-2 h-2 rotate-45 bg-[#161630]/95 border-r border-b border-[#915EFF]/30" />
+          </motion.div>,
+          document.body
+        )}
 
         {/* Legend panel and aggregate statistics */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-3 border-t border-[#2a2a40]/30 pt-3">

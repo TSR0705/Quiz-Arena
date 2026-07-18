@@ -253,7 +253,7 @@ const DashboardHome = () => {
           initial="hidden"
           animate="show"
           whileHover={{ y: -1 }}
-          className={`${styles.card} md:col-span-2 space-y-4 overflow-hidden`}
+          className={`${styles.card} md:col-span-2 space-y-4`}
         >
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-[#2a2a40]/60 pb-3">
             <div>
