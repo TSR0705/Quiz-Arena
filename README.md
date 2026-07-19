@@ -1,99 +1,189 @@
-# QuizArena
+<div align="center">
+  
+  # 🎯 QuizArena
+  
+  **A premium, immersive, production-grade assessment platform with real-time performance analytics, credentials verification, and streak trackers.**
+  
+  [![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-black?style=flat-square&logo=vercel)](https://quiz-arena-tsr.vercel.app/)
+  [![Jest Tests](https://img.shields.io/badge/Tests-37%20Passed-brightgreen?style=flat-square&logo=jest)](https://github.com/TSR0705/Quiz-Arena)
+  [![Database](https://img.shields.io/badge/DB-Neon%20PostgreSQL-blue?style=flat-square&logo=postgresql)](https://neon.tech)
+  [![SendGrid](https://img.shields.io/badge/Email-SendGrid%20API-009BDE?style=flat-square&logo=sendgrid)](https://sendgrid.com)
+  [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-A premium assessment platform designed for immersive quiz-taking, real-time performance analytics, credentials validation, and progressive leaderboard systems.
-
----
-
-## Overview
-
-QuizArena is a full-stack web application that transforms basic quizzes into a focused, gamified assessment workspace. It allows users (and verified guests) to select specific topics, start timed assessments with interactive lifelines (hints, 50/50 eliminations), track active streaks/XP progress, and claim public verifiable certificates on perfect completions.
-
----
-
-## Features
-
-### Authentication & Sessions
-- **Multi-tenant Flow**: Supports credential-based user accounts and ephemeral guest sessions.
-- **Secure Persistence**: Employs HTTP-only cookies storing cryptographically signed JWT access/refresh tokens.
-- **Auto-Sync Recovery**: Automatically saves drafts and syncs pending offline inputs to the database once a connection is restored.
-
-### Quiz Engine (Assessment & Practice Modes)
-- **Focus Mode**: Isolates the viewport, hiding distraction panels to center focus purely on the active questions.
-- **Interactive Keyboard Controls**: Hotkeys mapped for selecting options (`1`–`4`), flagging questions (`f`), jumping pages (`ArrowLeft`/`ArrowRight`), and saving inputs (`Enter`).
-- **Progress Trackers**: Sidebar navigations show progress bars, countdown timers, and flagged question matrices.
-- **Urgency HUD**: Timers dynamically color-shift and trigger vibration-shakes as countdowns reach low/critical states.
-
-### Certificates & Verification
-- **Verifiable Credentials**: Automatically issues a verified digital certificate code on scoring 100% on assessments containing 5 or more questions.
-- **Public Lookups**: Rate-limited open verification routes allow third parties to lookup and validate certificate codes.
-
-### Dashboard & Leaderboard
-- **Heatmap Grid**: Captures daily user activity logs, tracking weekly study hours, questions solved, and streak history.
-- **Dynamic Leaderboards**: Real-time rank calculation filtered by specific category, topic, and difficulty thresholds.
+  <h4>
+    <a href="https://quiz-arena-tsr.vercel.app/">Live Demo</a>
+    <span> · </span>
+    <a href="/docs/api.md">API Docs</a>
+    <span> · </span>
+    <a href="/docs/architecture.md">Architecture</a>
+    <span> · </span>
+    <a href="/docs/database.md">DB Schema</a>
+  </h4>
+  
+</div>
 
 ---
 
-## Tech Stack
-
-- **Frontend**: React 18, Vite 4, Tailwind CSS, Framer Motion, Toastify
-- **Backend**: Node.js, Express, Knex.js
-- **Database**: PostgreSQL (Neon Serverless compatibility)
-- **Email Service**: SendGrid REST Web API integration
-- **Deployment**: Vercel
+## 📖 Table of Contents
+- [✨ Key Features](#-key-features)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [📁 Folder Structure](#-folder-structure)
+- [🚀 Getting Started](#-getting-started)
+- [🔑 Environment Variables](#-environment-variables)
+- [📦 Deployment](#-deployment)
+- [📜 Scripts](#-scripts)
 
 ---
 
-## Folder Structure
+## ✨ Key Features
+
+### 💻 Fullscreen Focus Assessment Mode
+- **Zero Distractions**: Hides navigation menus, sidebar metrics, and notification banners when entering a quiz.
+- **Smart Countdown HUD**: The timer dynamically color-shifts (Normal ➔ Pulsing Orange ➔ Pulsing Red with vibration shakes) as limits approach.
+- **Hotkeys**: Full keyboard navigation support (keys `1`–`4` for options, `Arrow` keys to browse questions, `Enter` to draft save, and `f` to toggle flag).
+- **Session Auto-Save & Sync**: Instant state backups on click. Answers queue locally when connection drops and sync automatically upon restoration.
+- **Recovery Manager**: Detects tab closures or browser crashes mid-quiz, prompting the user with an immersive resume dialogue.
+
+### 🏆 Gamification Engine
+- **Contribution Heatmap**: Custom GitHub-style calendar tracking study logs, XP points, and completed sessions.
+- **Active Streaks**: Streak logic validating consecutive learning days.
+- **Dynamic Leaderboards**: Filter rankings by categories, subtopics, and difficulty tiers.
+
+### 🛡️ Credentials & Verification
+- **Verifiable Credentials**: Score 100% on assessments containing 5+ questions to generate a verified digital certificate.
+- **Abuse Protections**: Open verification routes are shielded by request limiters to block lookup scraping.
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend Client
+- **Core**: React 18, Vite 4 (Vastly superior bundle speeds)
+- **Styling**: Tailwind CSS (Tailored glassmorphism UI system)
+- **Animation**: Framer Motion (Transitions and physics-based interactions)
+- **Utilities**: Toastify (Alerts), Lucide-React (Vibrant icons)
+
+### Backend Engine
+- **Server**: Node.js & Express.js
+- **Database Handler**: Knex.js query builder with `pg` native driver
+- **Security Middleware**: Helmet headers configuration, custom map-based IP rate limiters
+- **Email Service**: SendGrid REST Web API integration (Cold-start optimized)
+
+### Production Services
+- **Hosting**: Vercel (Edge-compatible serverless rewrites)
+- **Database Host**: Neon Serverless PostgreSQL (SSL enforced)
+
+<p align="center">
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
+  <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="Postgres" />
+  <img src="https://img.shields.io/badge/SendGrid-009BDE?style=for-the-badge&logo=sendgrid&logoColor=white" alt="SendGrid" />
+</p>
+
+---
+
+## 📁 Folder Structure
 
 ```text
 Quiz Arena/
-├── server/                 # Backend Node/Express Application
-│   ├── bin/                # CLI Utilities (Database Importers)
-│   ├── config/             # Database and Environment Initializers
+├── server/                 # Express backend application
+│   ├── bin/                # CLI DB importers
+│   ├── config/             # DB & env initializers
 │   ├── controllers/        # REST Route Controllers
-│   ├── middleware/         # Auth Filters and Abuse Rate Limiters
-│   ├── migrations/         # PostgreSQL Knex Schema Migrations
-│   ├── routes/             # Express Route Mapping
-│   ├── seeds/              # Database Categories, Badges, and Questions Seed
-│   └── services/           # Service modules (scoring, emails)
+│   ├── middleware/         # Auth & Rate limiters
+│   ├── migrations/         # Knex database migrations
+│   ├── routes/             # Express API Routes
+│   ├── seeds/              # Categories & questions seed
+│   └── services/           # Scoring & SendGrid REST mailer
 ├── src/                    # Frontend React SPA
-│   ├── assets/             # Images and Static SVGs
-│   ├── components/         # Reusable Panels, Modals, and Route Pages
-│   ├── contexts/           # Global AuthContext providers
-│   ├── styles/             # Tailwind utility presets
+│   ├── assets/             # SVGs & images
+│   ├── components/         # Focus mode quiz workspace, dashboard & profile
+│   ├── contexts/           # AuthState providers
 │   └── utils/              # Client API helpers
-├── public/                 # Client Static Assets (Earth/Robot Models)
-├── vercel.json             # Vercel Serverless routing rewrites
-└── package.json            # Node project configuration
+├── vercel.json             # Edge functions routing config
+└── package.json            # Client configuration
 ```
 
 ---
 
-## Environment Variables
+## 🚀 Getting Started
 
-| Variable Name | Required? | Purpose | Default / Production Value |
-|---|---|---|---|
-| `DATABASE_URL` | Yes | Neon Postgres connection URI | `postgresql://...` |
-| `JWT_SECRET` | Yes | Token cryptographical signature secret | Random 32+ character string |
-| `REFRESH_TOKEN_SECRET` | Yes | Refresh token cryptographical signature secret | Random 32+ character string |
-| `SENDGRID_API_KEY` | Yes | SendGrid Web API Access Key | `SG.q9MrN-q...` |
-| `EMAIL_FROM` | Yes | Verified SendGrid sender email address | E.g. `no-reply@yourdomain.com` |
-| `FRONTEND_URL` | Yes | Client public hosting URL | E.g. `https://quizarena.vercel.app` |
-| `CORS_ORIGIN` | Yes | Authorized domain origin for CORS headers | E.g. `https://quizarena.vercel.app` |
-| `NODE_ENV` | Yes | Runtime environment state | `production` or `development` |
+### 1. Installation
+Clone the repository and install dependencies in both root and server scopes:
+```bash
+# Clone the repository
+git clone https://github.com/TSR0705/Quiz-Arena.git
+cd Quiz-Arena
+
+# Install Client dependencies
+npm install
+
+# Install Server dependencies
+cd server
+npm install
+```
+
+### 2. Database Initialization
+```bash
+# 1. Initialize local tables
+node test-db.js
+
+# 2. Run migrations
+npm run migrate
+
+# 3. Seed data
+npm run seed
+```
+
+### 3. Run Development Servers
+```bash
+# In the server directory:
+npm run dev
+
+# In the root (client) directory:
+npm run dev
+```
 
 ---
 
-## Scripts
+## 🔑 Environment Variables
 
-### Client SPA (Root Folder)
-- `npm run dev`: Launch the Vite development server.
-- `npm run build`: Compile static production assets to `/dist`.
-- `npm run preview`: Preview Vite production build locally.
+Create a `.env` file in the project root:
+```env
+PORT=5000
+NODE_ENV=development
+DATABASE_URL=postgresql://postgres:password@localhost:5432/quizarena
+DATABASE_URL_TEST=postgres://postgres:password@localhost:5432/quizarena_test
+JWT_SECRET=your_32_character_signing_key_here
+REFRESH_TOKEN_SECRET=your_other_32_character_signing_key_here
+SENDGRID_API_KEY=SG.your_sendgrid_api_key
+EMAIL_FROM=verified-sender@domain.com
+FRONTEND_URL=http://localhost:5173
+CORS_ORIGIN=http://localhost:5173
+```
 
-### Express Backend (`/server` Folder)
-- `npm start`: Boot node server.
-- `npm run dev`: Boot node server with live-reloading nodemon.
-- `npm run migrate`: Execute database schema migrations.
-- `npm run seed`: Populate database with seed categories and questions.
-- `npm run test`: Execute Jest integration and unit test suites.
+---
+
+## 📦 Deployment
+
+### Vercel Routing Map
+Vercel routes requests based on the root-level [vercel.json](file:///c:/Users/ACER/OneDrive/Desktop/Quiz%20Arena/vercel.json):
+- `/api/*` endpoints map directly to the Express server function entry [server/index.js](file:///c:/Users/ACER/OneDrive/Desktop/Quiz%20Arena/server/index.js).
+- All other routes fall back to the Vite frontend SPA client build output in `dist/`.
+
+---
+
+## 📜 Scripts
+
+### Client (Root)
+- `npm run dev` — Launches client dev server.
+- `npm run build` — Compiles static assets to `dist/`.
+
+### Server (`/server`)
+- `npm run dev` — Launches backend dev server with nodemon.
+- `npm run test` — Runs Jest integration test suite.
+- `npm run migrate` — Runs Knex schema updates.
+- `npm run seed` — Populates database questions bank.
