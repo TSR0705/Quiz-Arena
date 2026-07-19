@@ -34,7 +34,7 @@ const Hero = () => {
             Test your knowledge across various topics, <br></br>compete with others, and see how you rank on the leaderboard.
           </p>
 
-          <a href="http://localhost:5173/#Quizzes">
+          <a href="/#Quizzes">
             <button className="mt-4 px-6 py-3 bg-[#915EFF] text-white rounded-lg hover:bg-[#7A4ED9] transition-colors">
               Start Quiz
             </button>

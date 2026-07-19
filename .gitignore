@@ -27,3 +27,13 @@ dist-ssr
 
 # vscode
 .vscode
+
+# Agent Configurations & System-Generated Logs
+.gemini/
+.agents/
+.system_generated/
+task.md
+walkthrough.md
+implementation_plan.md
+adversarial_audit_report.md
+production_readiness_audit.md
