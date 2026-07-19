@@ -4,14 +4,14 @@
   
   **A premium, immersive, production-grade assessment platform with real-time performance analytics, credentials verification, and streak trackers.**
   
-  [![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-black?style=flat-square&logo=vercel)](https://quiz-arena-tsr.vercel.app/)
+  [![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-black?style=flat-square&logo=vercel)](https://quiz-arena-sepia.vercel.app/)
   [![Jest Tests](https://img.shields.io/badge/Tests-37%20Passed-brightgreen?style=flat-square&logo=jest)](https://github.com/TSR0705/Quiz-Arena)
   [![Database](https://img.shields.io/badge/DB-Neon%20PostgreSQL-blue?style=flat-square&logo=postgresql)](https://neon.tech)
   [![SendGrid](https://img.shields.io/badge/Email-SendGrid%20API-009BDE?style=flat-square&logo=sendgrid)](https://sendgrid.com)
   [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
   <h4>
-    <a href="https://quiz-arena-tsr.vercel.app/">Live Demo</a>
+    <a href="https://quiz-arena-sepia.vercel.app/">Live Demo</a>
     <span> · </span>
     <a href="/docs/api.md">API Docs</a>
     <span> · </span>
