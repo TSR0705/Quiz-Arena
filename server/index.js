@@ -21,9 +21,17 @@ app.set('trust proxy', 1);
 
 // 4. CORS configuration
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? (process.env.CORS_ORIGIN || process.env.FRONTEND_URL)
-    : 'http://localhost:5173',
+  origin: (origin, callback) => {
+    const allowed = process.env.NODE_ENV === 'production'
+      ? (process.env.CORS_ORIGIN || process.env.FRONTEND_URL)
+      : 'http://localhost:5173';
+    
+    if (!allowed || allowed === origin || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 };
 app.use(cors(corsOptions));

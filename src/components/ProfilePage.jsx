@@ -52,7 +52,19 @@ const ProfilePage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
       });
-      const data = await res.json();
+      
+      let data = {};
+      try {
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          data = await res.json();
+        } else {
+          const text = await res.text();
+          data = { error: { message: text || "Failed to update profile." } };
+        }
+      } catch (e) {
+        data = { error: { message: "Failed to parse response." } };
+      }
 
       if (res.ok) {
         setMessage({ type: "success", text: "Profile details updated successfully!" });
@@ -80,7 +92,19 @@ const ProfilePage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: form.email })
       });
-      const data = await res.json();
+      
+      let data = {};
+      try {
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          data = await res.json();
+        } else {
+          const text = await res.text();
+          data = { error: { message: text || "Failed to request password reset." } };
+        }
+      } catch (e) {
+        data = { error: { message: "Failed to parse response." } };
+      }
 
       if (res.ok) {
         setSecurityMessage("A password reset link has been dispatched to your email address.");

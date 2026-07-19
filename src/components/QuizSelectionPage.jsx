@@ -64,7 +64,18 @@ const QuizSelectionPage = () => {
         }),
       });
 
-      const data = await res.json();
+      let data = {};
+      try {
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          data = await res.json();
+        } else {
+          const text = await res.text();
+          data = { error: { message: text || "Failed to start quiz attempt." } };
+        }
+      } catch (e) {
+        data = { error: { message: "Failed to parse response." } };
+      }
 
       if (res.ok) {
         navigate(`/quiz/${data.attemptId}`);

@@ -13,24 +13,23 @@ class ConsoleEmailProvider {
 
 class SendGridEmailProvider {
   constructor() {
-    this.apiKey = process.env.SENDGRID_API_KEY;
-    if (!this.apiKey || this.apiKey.trim() === '') {
-      if (process.env.NODE_ENV === 'production') {
-        throw new Error(
-          'FATAL: SENDGRID_API_KEY is required in production but is missing or empty. ' +
-          'Set the SENDGRID_API_KEY environment variable before starting the server.'
-        );
-      }
-    }
     this.fromEmail = process.env.EMAIL_FROM || 'no-reply@quizarena.com';
   }
 
   async sendPasswordResetEmail(email, resetUrl) {
+    const apiKey = process.env.SENDGRID_API_KEY;
+    if (!apiKey || apiKey.trim() === '') {
+      throw new Error(
+        'FATAL: SENDGRID_API_KEY is required in production but is missing or empty. ' +
+        'Set the SENDGRID_API_KEY environment variable.'
+      );
+    }
+
     // In production, send a real REST request to SendGrid API
     const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({

@@ -57,7 +57,18 @@ const Auth = () => {
         body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
+      let data = {};
+      try {
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          data = await res.json();
+        } else {
+          const text = await res.text();
+          data = { error: { message: text || "A server error occurred." } };
+        }
+      } catch (parseErr) {
+        data = { error: { message: "Failed to parse server response." } };
+      }
 
       if (res.ok) {
         if (mode === "contact") {
