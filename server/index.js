@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { validateEnv } from './config/env.js';
 import apiRouter from './routes/api.js';
 
@@ -10,10 +11,15 @@ validateEnv();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// 2. Trust proxy for production reverse proxy support
+// 2. Mount helmet security headers
+app.use(helmet({
+  contentSecurityPolicy: false // Defer to CDN/Vercel or custom config if required to prevent asset loading blocking
+}));
+
+// 3. Trust proxy for production reverse proxy support
 app.set('trust proxy', 1);
 
-// 3. CORS configuration
+// 4. CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
     ? (process.env.CORS_ORIGIN || process.env.FRONTEND_URL)
@@ -22,7 +28,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// 4. Global Middleware
+// 5. Global Middleware
 app.use(express.json());
 app.use(cookieParser());
 
@@ -34,10 +40,10 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-// 5. API Router
+// 6. API Router
 app.use('/api', apiRouter);
 
-// 6. API 404 Handler
+// 7. API 404 Handler
 app.use('/api/*', (req, res) => {
   res.status(404).json({
     error: {
@@ -47,7 +53,7 @@ app.use('/api/*', (req, res) => {
   });
 });
 
-// 7. Global Error Handler
+// 8. Global Error Handler
 app.use((err, req, res, next) => {
   if (process.env.NODE_ENV === 'production') {
     console.error('Unhandled Server Error:', err.message);
@@ -62,7 +68,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 8. Start listening
+// 9. Start listening
 let server;
 if (process.env.NODE_ENV !== 'test') {
   server = app.listen(PORT, () => {
@@ -70,7 +76,7 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-// 9. Graceful Shutdown
+// 10. Graceful Shutdown
 function gracefulShutdown(signal) {
   console.log(`\n${signal} received. Shutting down gracefully...`);
   if (server) {

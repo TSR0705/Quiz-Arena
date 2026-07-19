@@ -32,14 +32,14 @@ router.get('/ready', async (req, res) => {
 // ==========================================
 // AUTHENTICATION ROUTES
 // ==========================================
-router.post('/auth/signup', auth.signup);
-router.post('/auth/login', auth.login);
+router.post('/auth/signup', rateLimiter(15, 15 * 60 * 1000), auth.signup);
+router.post('/auth/login', rateLimiter(15, 15 * 60 * 1000), auth.login);
 router.post('/auth/logout', auth.logout);
 router.post('/auth/guest', auth.guest);
 router.post('/auth/register-guest', auth.registerGuest);
 router.post('/auth/refresh', auth.refresh);
-router.post('/auth/forgot-password', auth.forgotPassword);
-router.post('/auth/reset-password', auth.resetPassword);
+router.post('/auth/forgot-password', rateLimiter(5, 15 * 60 * 1000), auth.forgotPassword);
+router.post('/auth/reset-password', rateLimiter(5, 15 * 60 * 1000), auth.resetPassword);
 router.get('/auth/me', authenticate, auth.me);
 
 // ==========================================
